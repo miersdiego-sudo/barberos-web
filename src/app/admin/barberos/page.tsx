@@ -41,12 +41,22 @@ export default function BarberosPage() {
     try {
       const ext = file.name.split('.').pop()
       const path = `barbero-${id}.${ext}`
+      const { data: existing } = await supabase.storage.from('barberos').list('', { search: `barbero-${id}` })
+      if (existing) {
+        for (const f of existing) {
+          if (f.name.startsWith(`barbero-${id}`)) {
+            await supabase.storage.from('barberos').remove([f.name])
+          }
+        }
+      }
       const { error: uploadError } = await supabase.storage.from('barberos').upload(path, file, { upsert: true })
       if (uploadError) throw uploadError
       const { data: urlData } = supabase.storage.from('barberos').getPublicUrl(path)
       const foto = urlData.publicUrl
-      await actualizarBarbero(id, { foto })
-      setBarberos(barberos.map(b => b.id === id ? { ...b, foto } : b))
+      // force cache bust
+      const fotoFinal = `${foto}?v=${Date.now()}`
+      await actualizarBarbero(id, { foto: fotoFinal })
+      setBarberos(barberos.map(b => b.id === id ? { ...b, foto: fotoFinal } : b))
     } catch (e) {
       console.error(e)
       alert('Error al subir foto')
