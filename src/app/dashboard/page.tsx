@@ -15,6 +15,7 @@ type Turno = {
   telefono: string
   precio: number
   estado?: string
+  observaciones?: string | null
 }
 
 function aHora(minutos: number) {
@@ -119,26 +120,72 @@ export default function DashboardPage() {
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <a href="/admin/barberos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Barberos</a>
+            <a href="/admin/servicios" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Servicios</a>
+            <a href="/admin/productos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Productos</a>
+            <a href="/admin/horarios" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Horarios</a>
             <a href="/admin/promociones" style={{ color: '#D9A441', textDecoration: 'none', fontSize: 14 }}>Promociones</a>
             <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Nueva reserva</a>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input type="month" value={mes} onChange={e => setMes(e.target.value)}
-            style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
-          <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
-            style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos los barberos</option>
-            {barberosFiltro.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
-            Total: <strong style={{ color: '#C8862B' }}>{formatearPrecio(totalRecaudado)}</strong>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input type="month" value={mes} onChange={e => setMes(e.target.value)}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
+            <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+              <option value="">Todos los barberos</option>
+              {barberosFiltro.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
+              💰 Total: <strong style={{ color: '#C8862B' }}>{formatearPrecio(totalRecaudado)}</strong>
+            </div>
+            <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
+              📋 Turnos: <strong style={{ color: '#C8862B' }}>{filtered.length}</strong>
+            </div>
+            <button onClick={() => {
+              const headers = ['Fecha','Barbero','Servicio','Inicio','Fin','Cliente','Cedula','WhatsApp','Precio','Estado'].join(',')
+              const rows = filtered.map(t => `${t.fecha},"${t.barbero}","${t.servicio}","${aHora(t.inicio)}","${aHora(t.fin)}","${t.nombre}","${t.cedula}","${t.telefono}",${t.precio},"${t.estado||'pendiente'}"`).join('\n')
+              const blob = new Blob(['\uFEFF' + headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a'); a.href = url; a.download = `turnos_${mes}.csv`; a.click()
+              URL.revokeObjectURL(url)
+            }} style={{ padding: '10px 16px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+              Exportar CSV
+            </button>
           </div>
-          <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
-            Turnos: <strong style={{ color: '#C8862B' }}>{filtered.length}</strong>
-          </div>
-        </div>
+
+          {(() => {
+            const finalizados = filtered.filter(t => t.estado === 'finalizado').length
+            const cancelados = filtered.filter(t => t.estado === 'cancelado').length
+            const pendientes = filtered.filter(t => !t.estado || t.estado === 'pendiente').length
+            const barberoCount: Record<string, number> = {}
+            const servicioCount: Record<string, number> = {}
+            filtered.forEach(t => {
+              barberoCount[t.barbero] = (barberoCount[t.barbero] || 0) + 1
+              servicioCount[t.servicio] = (servicioCount[t.servicio] || 0) + 1
+            })
+            const topBarbero = Object.entries(barberoCount).sort((a, b) => b[1] - a[1])[0]
+            const topServicio = Object.entries(servicioCount).sort((a, b) => b[1] - a[1])[0]
+            return (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                <div style={{ padding: '8px 14px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
+                  ✅ Finalizados: <strong style={{ color: '#27ae60' }}>{finalizados}</strong>
+                </div>
+                <div style={{ padding: '8px 14px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
+                  ❌ Cancelados: <strong style={{ color: '#e74c3c' }}>{cancelados}</strong>
+                </div>
+                <div style={{ padding: '8px 14px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
+                  ⏳ Pendientes: <strong style={{ color: '#D9A441' }}>{pendientes}</strong>
+                </div>
+                {topBarbero && <div style={{ padding: '8px 14px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
+                  💇 Barbero top: <strong style={{ color: '#C8862B' }}>{topBarbero[0]}</strong> ({topBarbero[1]})
+                </div>}
+                {topServicio && <div style={{ padding: '8px 14px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
+                  ✂️ Servicio top: <strong style={{ color: '#C8862B' }}>{topServicio[0]}</strong> ({topServicio[1]})
+                </div>}
+              </div>
+            )
+          })()}
 
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, color: '#666' }}>
@@ -171,6 +218,7 @@ export default function DashboardPage() {
                             <div>
                               <p style={{ fontWeight: 700, fontSize: 15 }}>{t.nombre}</p>
                               <p style={{ color: '#888', fontSize: 13 }}>{t.telefono} · C.I. {t.cedula}</p>
+                              {t.observaciones && <p style={{ color: '#aaa', fontSize: 12, fontStyle: 'italic', marginTop: 2 }}>📝 {t.observaciones}</p>}
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <p style={{ fontSize: 14, color: '#C8862B' }}>{aHora(t.inicio)} — {aHora(t.fin)}</p>

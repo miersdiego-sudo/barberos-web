@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getPromos, crearPromo, eliminarPromo, serviciosDisponibles } from '@/lib/supabaseClient'
+import { getPromos, crearPromo, eliminarPromo, getServicios, type ServicioDB } from '@/lib/supabaseClient'
 
 type Promo = { id?: number; nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }
 
 export default function PromocionesPage() {
   const [promos, setPromos] = useState<Promo[]>([])
+  const [servicios, setServicios] = useState<ServicioDB[]>([])
   const [nombre, setNombre] = useState('')
   const [porcentaje, setPorcentaje] = useState('')
   const [inicio, setInicio] = useState('')
@@ -15,6 +16,7 @@ export default function PromocionesPage() {
 
   useEffect(() => {
     getPromos().then(setPromos).catch(console.error)
+    getServicios().then(setServicios).catch(console.error)
   }, [])
 
   const agregar = async () => {
@@ -84,11 +86,11 @@ export default function PromocionesPage() {
                 style={{ width: '100%', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             </div>
           </div>
-          <select value={servicio} onChange={e => setServicio(e.target.value)}
-            style={{ display: 'block', width: '100%', padding: 10, marginBottom: 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos los servicios</option>
-            {serviciosDisponibles.map(s => <option key={s.nombre} value={s.nombre}>{s.nombre}</option>)}
-          </select>
+            <select value={servicio} onChange={e => setServicio(e.target.value)}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }}>
+              <option value="">Todos los servicios</option>
+              {servicios.map(s => <option key={s.id ?? s.nombre} value={s.nombre}>{s.nombre}</option>)}
+            </select>
           <button onClick={agregar} disabled={!nombre || !porcentaje || !inicio || !fin}
             style={{ padding: '10px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: (!nombre || !porcentaje || !inicio || !fin) ? 0.5 : 1 }}>
             Agregar promoción

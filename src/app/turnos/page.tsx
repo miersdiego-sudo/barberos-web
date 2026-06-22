@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getTurnos, getPromos, getBarberos, crearTurno, actualizarTurno, serviciosDisponibles } from '@/lib/supabaseClient'
+import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, crearTurno, actualizarTurno, type ServicioDB, type HorarioDB } from '@/lib/supabaseClient'
 
 const limpieza = 10
 
@@ -27,11 +27,15 @@ function aHora(minutos: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-function generarSlots(fecha: string, servicio: { duracion: number }, turnos: Turno[], barbero: string) {
-  const manianaInicio = aMinutos('09:00')
-  const manianaFin = aMinutos('13:00')
-  const tardeInicio = aMinutos('14:00')
-  const tardeFin = aMinutos('19:00')
+function generarSlots(fecha: string, servicio: { duracion: number }, turnos: Turno[], barbero: string, horarios: HorarioDB[]) {
+  const dia = new Date(fecha + 'T12:00:00').getDay()
+  const h = horarios.find(h => h.dia_semana === dia)
+  if (!h || !h.activo) return []
+
+  const manianaInicio = aMinutos(h.inicio_manana)
+  const manianaFin = aMinutos(h.fin_manana)
+  const tardeInicio = aMinutos(h.inicio_tarde)
+  const tardeFin = aMinutos(h.fin_tarde)
 
   const ocupado = turnos.filter(t => t.barbero === barbero && t.fecha === fecha)
 
@@ -58,16 +62,19 @@ function generarSlots(fecha: string, servicio: { duracion: number }, turnos: Tur
 export default function TurnosPage() {
   const [paso, setPaso] = useState(1)
   const [barbero, setBarbero] = useState('')
-  const [servicio, setServicio] = useState<typeof serviciosDisponibles[number] | null>(null)
+  const [servicio, setServicio] = useState<ServicioDB | null>(null)
   const [fecha, setFecha] = useState('')
   const [horario, setHorario] = useState('')
   const [nombre, setNombre] = useState('')
   const [cedula, setCedula] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [observaciones, setObservaciones] = useState('')
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [confirmado, setConfirmado] = useState(false)
   const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }[]>([])
   const [barberos, setBarberos] = useState<{ nombre: string; foto?: string | null }[]>([])
+  const [servicios, setServicios] = useState<ServicioDB[]>([])
+  const [horarios, setHorarios] = useState<HorarioDB[]>([])
   const [cancelando, setCancelando] = useState(false)
   const [cedulaCancel, setCedulaCancel] = useState('')
   const [misTurnos, setMisTurnos] = useState<any[]>([])
@@ -76,6 +83,8 @@ export default function TurnosPage() {
     getTurnos().then(setTurnos).catch(console.error)
     getPromos().then(setPromos).catch(console.error)
     getBarberos().then(b => setBarberos(b.map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
+    getServicios().then(setServicios).catch(console.error)
+    getHorarios().then(setHorarios).catch(console.error)
   }, [])
 
   const promoActiva = fecha
@@ -83,7 +92,7 @@ export default function TurnosPage() {
     : null
 
   const slotsDisponibles = fecha && servicio
-    ? generarSlots(fecha, servicio, turnos, barbero)
+    ? generarSlots(fecha, servicio, turnos, barbero, horarios)
     : []
 
   const precioFinal = servicio && promoActiva
@@ -101,6 +110,7 @@ export default function TurnosPage() {
       cedula,
       telefono,
       precio: precioFinal,
+      observaciones: observaciones.trim() || null,
     }
     try {
       await crearTurno(nuevo)
@@ -121,6 +131,7 @@ export default function TurnosPage() {
     setNombre('')
     setCedula('')
     setTelefono('')
+    setObservaciones('')
     setConfirmado(false)
   }
 
@@ -237,7 +248,8 @@ export default function TurnosPage() {
         {paso === 2 && (
           <>
             <h2 style={{ fontSize: 18, marginBottom: 16, color: '#ccc' }}>Elegí el servicio</h2>
-            {serviciosDisponibles.map(s => {
+            {servicios.length === 0 ? <p style={{ color: '#666' }}>Cargando servicios...</p> : (
+            servicios.map(s => {
               const selected = servicio?.nombre === s.nombre
               return (
                 <button key={s.nombre} onClick={() => { setServicio(s); setPaso(3) }}
@@ -250,7 +262,7 @@ export default function TurnosPage() {
                   </div>
                 </button>
               )
-            })}
+            }))}
             <button onClick={() => setPaso(1)} style={{ marginTop: 16, background: 'none', border: 'none', color: '#C8862B', cursor: 'pointer', fontSize: 14 }}>← Volver</button>
           </>
         )}
@@ -326,6 +338,8 @@ export default function TurnosPage() {
               Tu cédula se usa para promociones, sorteos de vales y cortes de pelo.
             </p>
             <input type="tel" placeholder="WhatsApp" value={telefono} onChange={e => setTelefono(e.target.value)}
+              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
+            <input type="text" placeholder="Observaciones (opcional)" value={observaciones} onChange={e => setObservaciones(e.target.value)}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 20, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             <button onClick={() => setPaso(5)} disabled={!nombre || !cedula || !telefono}
               style={{
@@ -351,7 +365,8 @@ export default function TurnosPage() {
                 {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cliente:</strong> {nombre}</p>
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cédula:</strong> {cedula}</p>
-                <p><strong style={{ color: '#C8862B' }}>WhatsApp:</strong> {telefono}</p>
+            <p><strong style={{ color: '#C8862B' }}>WhatsApp:</strong> {telefono}</p>
+            {observaciones && <p style={{ marginTop: 6, color: '#aaa', fontSize: 13, fontStyle: 'italic' }}>"{observaciones}"</p>}
               </div>
               <button onClick={confirmar}
                 style={{
