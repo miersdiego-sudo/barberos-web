@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getTurnos, actualizarTurno, getBarberos } from '@/lib/supabaseClient'
+import { getTurnos, actualizarTurno, getBarberos, type BarberoDB } from '@/lib/supabaseClient'
 
 type Turno = {
   id?: number
@@ -36,13 +36,13 @@ export default function DashboardPage() {
   const [filtroBarbero, setFiltroBarbero] = useState('')
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nuevoBarbero, setNuevoBarbero] = useState('')
-  const [barberos, setBarberos] = useState<string[]>([])
+  const [barberos, setBarberos] = useState<BarberoDB[]>([])
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
 
   const cargar = () => {
     getTurnos().then(setTurnos).catch(console.error)
-    getBarberos().then(b => setBarberos(b.map(x => x.nombre))).catch(console.error)
+    getBarberos().then(setBarberos).catch(console.error)
   }
 
   useEffect(cargar, [])
@@ -62,6 +62,8 @@ export default function DashboardPage() {
   const barberosFiltro = [...new Set(turnos.map(t => t.barbero))]
   const totalRecaudado = filtered.reduce((sum, t) => sum + t.precio, 0)
   const dias = diasEnMes(year, month)
+
+  const fotoDeBarbero = (nombre: string) => barberos.find(b => b.nombre === nombre)?.foto
 
   const turnosPorDia: Record<string, Turno[]> = {}
   for (let d = 1; d <= dias; d++) {
@@ -176,16 +178,24 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <p style={{ fontSize: 14 }}>{t.servicio} · <span style={{ color: '#888' }}>{t.barbero}</span></p>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                {(() => {
+                                  const foto = fotoDeBarbero(t.barbero)
+                                  return foto ? (
+                                    <img src={foto} alt={t.barbero} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#666' }}>{t.barbero[0]}</div>
+                                  )
+                                })()}
+                                <p style={{ fontSize: 14 }}>{t.servicio} · <span style={{ color: '#888' }}>{t.barbero}</span></p>
                               <span style={{ fontSize: 12, color: b.color }}>{b.text}</span>
                             </div>
                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                               {editandoId === t.id ? (
-                                <div style={{ display: 'flex', gap: 6 }}>
+                                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                   <select value={nuevoBarbero} onChange={e => setNuevoBarbero(e.target.value)}
                                     style={{ padding: 6, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 13 }}>
-                                    {barberos.map(b => <option key={b} value={b}>{b}</option>)}
+                                    {barberos.map(b => <option key={b.id ?? b.nombre} value={b.nombre}>{b.nombre}</option>)}
                                   </select>
                                   <button onClick={() => t.id && cambiarBarbero(t.id)}
                                     style={{ padding: '6px 10px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>

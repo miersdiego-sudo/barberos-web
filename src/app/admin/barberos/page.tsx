@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getBarberos, crearBarbero, eliminarBarbero } from '@/lib/supabaseClient'
+import { getBarberos, crearBarbero, eliminarBarbero, actualizarBarbero, supabase } from '@/lib/supabaseClient'
 
-type Barbero = { id?: number; nombre: string }
+type Barbero = { id?: number; nombre: string; foto?: string | null }
 
 export default function BarberosPage() {
   const [barberos, setBarberos] = useState<Barbero[]>([])
@@ -24,13 +24,30 @@ export default function BarberosPage() {
     }
   }
 
-  const eliminar = async (id: number) => {
+  const eliminar = async (id?: number) => {
+    if (!id) return
     try {
       await eliminarBarbero(id)
       setBarberos(barberos.filter(b => b.id !== id))
     } catch (e) {
       console.error(e)
       alert('Error al eliminar barbero')
+    }
+  }
+
+  const subirFoto = async (id: number, file: File) => {
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `barbero-${id}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('barberos').upload(path, file, { upsert: true })
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from('barberos').getPublicUrl(path)
+      const foto = urlData.publicUrl
+      await actualizarBarbero(id, { foto })
+      setBarberos(barberos.map(b => b.id === id ? { ...b, foto } : b))
+    } catch (e) {
+      console.error(e)
+      alert('Error al subir foto')
     }
   }
 
@@ -68,13 +85,30 @@ export default function BarberosPage() {
             {barberos.map(b => (
               <div key={b.id ?? b.nombre} style={{
                 background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
               }}>
-                <p style={{ fontWeight: 700, fontSize: 15 }}>{b.nombre}</p>
-                <button onClick={() => b.id && eliminar(b.id)}
-                  style={{ padding: '6px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-                  Eliminar
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {b.foto ? (
+                    <img src={b.foto} alt={b.nombre}
+                      style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#888' }}>
+                      ?
+                    </div>
+                  )}
+                  <p style={{ fontWeight: 700, fontSize: 15 }}>{b.nombre}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <label style={{ padding: '6px 10px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                    Foto
+                    <input type="file" accept="image/*" style={{ display: 'none' }}
+                      onChange={e => { const f = e.target.files?.[0]; if (f && b.id) subirFoto(b.id, f) }} />
+                  </label>
+                  <button onClick={() => b.id && eliminar(b.id)}
+                    style={{ padding: '6px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                    Eliminar
+                  </button>
+                </div>
               </div>
             ))}
           </div>

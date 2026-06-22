@@ -67,12 +67,12 @@ export default function TurnosPage() {
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [confirmado, setConfirmado] = useState(false)
   const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }[]>([])
-  const [barberos, setBarberos] = useState<string[]>([])
+  const [barberos, setBarberos] = useState<{ nombre: string; foto?: string | null }[]>([])
 
   useEffect(() => {
     getTurnos().then(setTurnos).catch(console.error)
     getPromos().then(setPromos).catch(console.error)
-    getBarberos().then(b => setBarberos(b.map(x => x.nombre))).catch(console.error)
+    getBarberos().then(b => setBarberos(b.map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
   }, [])
 
   const promoActiva = fecha
@@ -185,8 +185,18 @@ export default function TurnosPage() {
           <>
             <h2 style={{ fontSize: 18, marginBottom: 16, color: '#ccc' }}>Elegí tu barbero</h2>
             {barberos.map(b => (
-              <button key={b} onClick={() => { setBarbero(b); setPaso(2) }}
-                style={barbero === b ? btnSel : btnBase}>{b}
+              <button key={b.nombre} onClick={() => { setBarbero(b.nombre); setPaso(2) }}
+                style={barbero === b.nombre ? btnSel : btnBase}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {b.foto ? (
+                    <img src={b.foto} alt={b.nombre} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: '#666' }}>
+                      {b.nombre[0]}
+                    </div>
+                  )}
+                  <span>{b.nombre}</span>
+                </div>
               </button>
             ))}
           </>

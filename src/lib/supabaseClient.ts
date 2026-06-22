@@ -33,6 +33,7 @@ export type PromoDB = {
 export type BarberoDB = {
   id?: number
   nombre: string
+  foto?: string | null
   created_at?: string
 }
 
@@ -86,6 +87,12 @@ export async function crearBarbero(nombre: string) {
 export async function eliminarBarbero(id: number) {
   const { error } = await supabase.from('barberos').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function actualizarBarbero(id: number, cambios: Partial<BarberoDB>) {
+  const { data, error } = await supabase.from('barberos').update(cambios).eq('id', id).select()
+  if (error) throw error
+  return data as BarberoDB[]
 }
 
 export const serviciosDisponibles = [
