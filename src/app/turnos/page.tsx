@@ -233,6 +233,19 @@ export default function TurnosPage() {
             }}>{p}</div>
           ))}
         </div>
+        {(() => {
+          const hoy = new Date()
+          const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+          const activas = promos.filter(p => hoyStr >= p.inicio && hoyStr <= p.fin)
+          if (activas.length === 0) return null
+          return (
+            <div style={{ marginBottom: 20, padding: 12, background: 'rgba(217,164,65,0.1)', borderRadius: 8, border: '1px solid #D9A441', fontSize: 13 }}>
+              {activas.map((p, i) => (
+                <p key={i} style={{ color: '#D9A441', marginBottom: i < activas.length - 1 ? 4 : 0 }}>🎯 {p.nombre} — {p.porcentaje}% OFF · válido del {p.inicio} al {p.fin}</p>
+              ))}
+            </div>
+          )
+        })()}
 
         <h1 style={{ textAlign: 'center', fontSize: 22, marginBottom: 32 }}>Reservá tu turno</h1>
 
