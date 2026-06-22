@@ -184,21 +184,25 @@ export default function TurnosPage() {
         {paso === 1 && (
           <>
             <h2 style={{ fontSize: 18, marginBottom: 16, color: '#ccc' }}>Elegí tu barbero</h2>
-            {barberos.map(b => (
-              <button key={b.nombre} onClick={() => { setBarbero(b.nombre); setPaso(2) }}
-                style={barbero === b.nombre ? btnSel : btnBase}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+              {barberos.map(b => (
+                <button key={b.nombre} onClick={() => { setBarbero(b.nombre); setPaso(2) }}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                    padding: 20, cursor: 'pointer', border: `2px solid ${barbero === b.nombre ? '#C8862B' : '#3a3a3a'}`,
+                    borderRadius: 10, fontSize: 15, background: barbero === b.nombre ? '#2B2B2B' : '#1E1E1E', color: '#F2EFE9',
+                  }}>
                   {b.foto ? (
-                    <img src={b.foto} alt={b.nombre} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                    <img src={b.foto} alt={b.nombre} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: '#666' }}>
+                    <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#888' }}>
                       {b.nombre[0]}
                     </div>
                   )}
                   <span>{b.nombre}</span>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </>
         )}
 
