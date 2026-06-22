@@ -188,18 +188,22 @@ export default function TurnosPage() {
               {barberos.map(b => (
                 <button key={b.nombre} onClick={() => { setBarbero(b.nombre); setPaso(2) }}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-                    padding: 20, cursor: 'pointer', border: `2px solid ${barbero === b.nombre ? '#C8862B' : '#3a3a3a'}`,
-                    borderRadius: 10, fontSize: 15, background: barbero === b.nombre ? '#2B2B2B' : '#1E1E1E', color: '#F2EFE9',
+                    display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 0,
+                    padding: 0, cursor: 'pointer', border: `2px solid ${barbero === b.nombre ? '#C8862B' : '#3a3a3a'}`,
+                    borderRadius: 10, fontSize: 15, background: '#1E1E1E', color: '#F2EFE9', overflow: 'hidden',
                   }}>
                   {b.foto ? (
-                    <img src={b.foto} alt={b.nombre} style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 6, objectFit: 'cover' }} />
+                    <img src={b.foto} alt={b.nombre} style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
                   ) : (
-                    <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 6, background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#888' }}>
+                    <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, color: '#666' }}>
                       {b.nombre[0]}
                     </div>
                   )}
-                  <span>{b.nombre}</span>
+                  <span style={{
+                    padding: '10px 0', textAlign: 'center', fontWeight: barbero === b.nombre ? 700 : 400,
+                    background: barbero === b.nombre ? '#C8862B' : '#2B2B2B', color: barbero === b.nombre ? '#1A1A1A' : '#eee',
+                    borderTop: `1px solid ${barbero === b.nombre ? '#C8862B' : '#3a3a3a'}`,
+                  }}>{b.nombre}</span>
                 </button>
               ))}
             </div>
