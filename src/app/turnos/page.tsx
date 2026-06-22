@@ -100,18 +100,17 @@ export default function TurnosPage() {
         if (!(fecha >= p.inicio && fecha <= p.fin)) return false
         if (!p.servicio) return true
         if (p.servicio === servicio?.nombre) return true
-        if (servicio?.componentes && servicios.length > 0) {
-          return servicios.some(s => servicio.componentes?.includes(s.id!) && s.nombre === p.servicio)
-        }
+        if (servicio?.nombre.includes(p.servicio)) return true
         return false
       })
     : null
 
   const descuentoProporcional = (() => {
-    if (!promoActiva || !promoActiva.servicio || !servicio || !servicio.componentes || servicios.length === 0) return null
+    if (!promoActiva || !promoActiva.servicio || !servicio || servicios.length === 0) return null
     if (promoActiva.servicio === servicio.nombre) return null
-    const comp = servicios.find(s => servicio.componentes?.includes(s.id!) && s.nombre === promoActiva.servicio)
-    return comp ? comp.precio / servicio.precio : null
+    if (!servicio.nombre.includes(promoActiva.servicio)) return null
+    const base = servicios.find(s => s.nombre === promoActiva.servicio)
+    return base ? base.precio / servicio.precio : null
   })()
 
   const slotsDisponibles = fecha && servicio
