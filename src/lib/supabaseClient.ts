@@ -35,6 +35,9 @@ export type BarberoDB = {
   id?: number
   nombre: string
   foto?: string | null
+  cedula?: string | null
+  telefono?: string | null
+  activo?: boolean
   created_at?: string
 }
 

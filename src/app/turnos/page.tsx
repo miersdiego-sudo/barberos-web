@@ -82,7 +82,7 @@ export default function TurnosPage() {
   useEffect(() => {
     getTurnos().then(setTurnos).catch(console.error)
     getPromos().then(setPromos).catch(console.error)
-    getBarberos().then(b => setBarberos(b.map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
+    getBarberos().then(b => setBarberos(b.filter(x => x.activo !== false).map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
     getServicios().then(setServicios).catch(console.error)
     getHorarios().then(setHorarios).catch(console.error)
   }, [])
