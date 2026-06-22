@@ -9,6 +9,7 @@ export default function ServiciosPage() {
   const [duracion, setDuracion] = useState('')
   const [precio, setPrecio] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
+  const [componentes, setComponentes] = useState<number[]>([])
 
   useEffect(() => { getServicios().then(setServicios).catch(console.error) }, [])
 
@@ -16,10 +17,10 @@ export default function ServiciosPage() {
     if (!nombre.trim() || !duracion || !precio) return
     try {
       const data = editId
-        ? await actualizarServicio(editId, { nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio) })
-        : await crearServicio({ nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio) })
+        ? await actualizarServicio(editId, { nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio), componentes: componentes.length > 0 ? componentes : null })
+        : await crearServicio({ nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio), componentes: componentes.length > 0 ? componentes : null })
       if (data) setServicios(servicios.map(s => s.id === editId ? data[0] : s).concat(editId ? [] : data))
-      setNombre(''); setDuracion(''); setPrecio(''); setEditId(null)
+      setNombre(''); setDuracion(''); setPrecio(''); setEditId(null); setComponentes([])
     } catch (e) { alert('Error al guardar servicio') }
   }
 
@@ -48,8 +49,26 @@ export default function ServiciosPage() {
               style={{ padding: '10px 20px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
               {editId ? 'Actualizar' : 'Agregar'}
             </button>
-            {editId && <button onClick={() => { setEditId(null); setNombre(''); setDuracion(''); setPrecio('') }}
+            {editId && <button onClick={() => { setEditId(null); setNombre(''); setDuracion(''); setPrecio(''); setComponentes([]) }}
               style={{ padding: '10px 14px', background: 'transparent', color: '#888', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>X</button>}
+          </div>
+          {componentes.length > 0 && (
+            <p style={{ color: '#D9A441', fontSize: 12, marginTop: 8 }}>Incluye: {servicios.filter(s => componentes.includes(s.id!)).map(s => `${s.nombre}`).join(', ')}{' · '}
+              Precio suma: Gs. {servicios.filter(s => componentes.includes(s.id!)).reduce((a, s) => a + s.precio, 0).toLocaleString('es-AR')}
+            </p>
+          )}
+        </div>
+
+        <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 24 }}>
+          <p style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>Si es un servicio combinado, marcá qué servicios incluye:</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {servicios.filter(s => s.id !== editId).map(s => (
+              <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#bbb', cursor: 'pointer' }}>
+                <input type="checkbox" checked={componentes.includes(s.id!)} onChange={() => setComponentes(prev => prev.includes(s.id!) ? prev.filter(id => id !== s.id) : [...prev, s.id!])}
+                  style={{ accentColor: '#C8862B' }} />
+                #{s.codigo || '--'} {s.nombre} — Gs. {s.precio.toLocaleString('es-AR')}
+              </label>
+            ))}
           </div>
         </div>
 
@@ -57,11 +76,11 @@ export default function ServiciosPage() {
           {servicios.map(s => (
             <div key={s.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <p style={{ fontWeight: 700, fontSize: 15 }}>{s.nombre}</p>
-                <p style={{ color: '#888', fontSize: 13 }}>{s.duracion} min · Gs. {s.precio.toLocaleString('es-AR')}</p>
+                <p style={{ fontWeight: 700, fontSize: 15 }}><span style={{ color: '#888', fontWeight: 400 }}>#{s.codigo || '--'} </span>{s.nombre}</p>
+                <p style={{ color: '#888', fontSize: 13 }}>{s.duracion} min · Gs. {s.precio.toLocaleString('es-AR')}{s.componentes && s.componentes.length > 0 ? ' · Incluye: ' + servicios.filter(x => (s.componentes ?? []).includes(x.id!)).map(x => x.nombre).join(', ') : ''}</p>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => { setEditId(s.id ?? null); setNombre(s.nombre); setDuracion(String(s.duracion)); setPrecio(String(s.precio)) }}
+                <button onClick={() => { setEditId(s.id ?? null); setNombre(s.nombre); setDuracion(String(s.duracion)); setPrecio(String(s.precio)); setComponentes(s.componentes ?? []) }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Editar</button>
                 <button onClick={async () => { if (s.id) { await eliminarServicio(s.id); setServicios(servicios.filter(x => x.id !== s.id)) } }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>

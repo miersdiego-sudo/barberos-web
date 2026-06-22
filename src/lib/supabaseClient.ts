@@ -43,9 +43,11 @@ export type BarberoDB = {
 
 export type ServicioDB = {
   id?: number
+  codigo?: string | null
   nombre: string
   duracion: number
   precio: number
+  componentes?: number[] | null
 }
 
 export type ProductoDB = {
@@ -150,8 +152,11 @@ export async function getServicios() {
   return data as ServicioDB[]
 }
 
-export async function crearServicio(s: Omit<ServicioDB, 'id'>) {
-  const { data, error } = await supabase.from('servicios').insert(s).select()
+export async function crearServicio(s: Omit<ServicioDB, 'id' | 'codigo'>) {
+  const { data: existentes } = await supabase.from('servicios').select('codigo').order('codigo', { ascending: false }).limit(1)
+  const ultimo = existentes?.[0]?.codigo ?? '00'
+  const proxCodigo = String(Number(ultimo) + 1).padStart(2, '0')
+  const { data, error } = await supabase.from('servicios').insert({ ...s, codigo: proxCodigo }).select()
   if (error) throw error
   return data as ServicioDB[]
 }

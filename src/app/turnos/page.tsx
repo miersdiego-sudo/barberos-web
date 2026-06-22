@@ -10,6 +10,10 @@ function formatearPrecio(n: number) {
   return 'Gs. ' + n.toLocaleString('es-AR')
 }
 
+function textoPromo(promo: { porcentaje: number; nombre: string }, parcial: number | null) {
+  return `${promo.porcentaje}% OFF (${promo.nombre})${parcial ? ' · parcial' : ''}`
+}
+
 type Turno = {
   barbero: string
   fecha: string
@@ -92,8 +96,23 @@ export default function TurnosPage() {
   }, [])
 
   const promoActiva = fecha
-    ? promos.find(p => fecha >= p.inicio && fecha <= p.fin && (!p.servicio || p.servicio === servicio?.nombre))
+    ? promos.find(p => {
+        if (!(fecha >= p.inicio && fecha <= p.fin)) return false
+        if (!p.servicio) return true
+        if (p.servicio === servicio?.nombre) return true
+        if (servicio?.componentes && servicios.length > 0) {
+          return servicios.some(s => servicio.componentes?.includes(s.id!) && s.nombre === p.servicio)
+        }
+        return false
+      })
     : null
+
+  const descuentoProporcional = (() => {
+    if (!promoActiva || !promoActiva.servicio || !servicio || !servicio.componentes || servicios.length === 0) return null
+    if (promoActiva.servicio === servicio.nombre) return null
+    const comp = servicios.find(s => servicio.componentes?.includes(s.id!) && s.nombre === promoActiva.servicio)
+    return comp ? comp.precio / servicio.precio : null
+  })()
 
   const slotsDisponibles = fecha && servicio
     ? generarSlots(fecha, servicio, turnos, barbero, horarios)
@@ -110,7 +129,13 @@ export default function TurnosPage() {
 
   const precioFinal = (() => {
     let base = servicio?.precio ?? 0
-    if (promoActiva) base = Math.round(base * (1 - promoActiva.porcentaje / 100))
+    if (promoActiva) {
+      if (descuentoProporcional) {
+        base = Math.round(base - base * descuentoProporcional * promoActiva.porcentaje / 100)
+      } else {
+        base = Math.round(base * (1 - promoActiva.porcentaje / 100))
+      }
+    }
     if (creditoSel) base = Math.round(base * (1 - creditoSel.descuento / 100))
     return base
   })()
@@ -192,7 +217,7 @@ export default function TurnosPage() {
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Fecha:</strong> {fecha}</p>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
-            {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) aplicado ✅</p>}
+            {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{textoPromo(promoActiva, descuentoProporcional)} aplicado ✅</p>}
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Cliente:</strong> {nombre}</p>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Cédula:</strong> {cedula}</p>
             <p><strong style={{ color: '#C8862B' }}>WhatsApp:</strong> {telefono}</p>
@@ -307,7 +332,7 @@ export default function TurnosPage() {
             <input type="date" value={fecha} onChange={e => { setFecha(e.target.value); setHorario('') }}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             {promoActiva && (
-              <p style={{ color: '#D9A441', fontSize: 13, marginBottom: 12 }}>🎉 {promoActiva.nombre} — {promoActiva.porcentaje}% OFF</p>
+              <p style={{ color: '#D9A441', fontSize: 13, marginBottom: 12 }}>{textoPromo(promoActiva, descuentoProporcional)}</p>
             )}
             {fecha && (
               <>
@@ -334,7 +359,7 @@ export default function TurnosPage() {
                     <p style={{ fontSize: 14, color: '#ccc' }}>{horario} → {aHora(aMinutos(horario) + servicio!.duracion)}</p>
                     <p style={{ fontSize: 16, color: '#F2EFE9', marginTop: 4 }}>
                       <strong>Total:</strong> {formatearPrecio(precioFinal)}
-                      {promoActiva && <span style={{ color: '#D9A441', fontSize: 13, marginLeft: 8 }}>({promoActiva.porcentaje}% OFF)</span>}
+                      {promoActiva && <span style={{ color: '#D9A441', fontSize: 13, marginLeft: 8 }}>({textoPromo(promoActiva, descuentoProporcional)})</span>}
                     </p>
                   </div>
                 )}
@@ -361,7 +386,7 @@ export default function TurnosPage() {
               <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Fecha:</strong> {fecha}</p>
               <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
               <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
-              {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
+                {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{textoPromo(promoActiva, descuentoProporcional)} ✅</p>}
               {creditoSel && <p style={{ color: '#D9A441', fontSize: 13 }}>🎯 {creditoSel.descuento}% OFF por compra de producto ✅</p>}
             </div>
             <input type="text" placeholder="Nombre y Apellido" value={nombre} onChange={e => setNombre(e.target.value)} readOnly={clienteExistente}
@@ -419,7 +444,7 @@ export default function TurnosPage() {
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Fecha:</strong> {fecha}</p>
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
-                {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
+              {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{textoPromo(promoActiva, descuentoProporcional)} ✅</p>}
                 {creditoSel && <p style={{ color: '#D9A441', fontSize: 13 }}>🎯 {creditoSel.descuento}% OFF por compra de producto ✅</p>}
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cliente:</strong> {nombre}</p>
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cédula:</strong> {cedula}</p>
