@@ -35,11 +35,13 @@ function diasEnMes(year: number, month: number) {
 export default function DashboardPage() {
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [filtroBarbero, setFiltroBarbero] = useState('')
+  const [filtroServicio, setFiltroServicio] = useState('')
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nuevoBarbero, setNuevoBarbero] = useState('')
   const [barberos, setBarberos] = useState<BarberoDB[]>([])
   const [verClientes, setVerClientes] = useState(false)
   const [verInactivos, setVerInactivos] = useState(false)
+  const [verGrafico, setVerGrafico] = useState(false)
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
 
@@ -59,6 +61,7 @@ export default function DashboardPage() {
 
   const filtered = turnosDelMes.filter(t => {
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
+    if (filtroServicio && t.servicio !== filtroServicio) return false
     return true
   })
 
@@ -137,6 +140,11 @@ export default function DashboardPage() {
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
               <option value="">Todos los barberos</option>
               {barberosFiltro.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select value={filtroServicio} onChange={e => setFiltroServicio(e.target.value)}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+              <option value="">Todos los servicios</option>
+              {[...new Set(turnos.map(t => t.servicio))].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
               💰 Total: <strong style={{ color: '#C8862B' }}>{formatearPrecio(totalRecaudado)}</strong>
@@ -261,6 +269,66 @@ export default function DashboardPage() {
                   )}
                 </div>
               )}
+
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                <button onClick={() => setVerGrafico(!verGrafico)}
+                  style={{ padding: '8px 14px', background: verGrafico ? '#C8862B' : '#2B2B2B', color: verGrafico ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+                  📈 Tendencia mensual
+                </button>
+              </div>
+
+              {verGrafico && (() => {
+                const meses: { label: string; total: number; count: number }[] = []
+                const ahora = new Date()
+                for (let i = 11; i >= 0; i--) {
+                  const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1)
+                  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+                  const label = d.toLocaleDateString('es', { month: 'short', year: '2-digit' })
+                  const delMes = turnos.filter(t => {
+                    const [y, m] = t.fecha.split('-').map(Number)
+                    if (y !== d.getFullYear() || m !== d.getMonth() + 1) return false
+                    if (t.estado !== 'finalizado') return false
+                    if (filtroBarbero && t.barbero !== filtroBarbero) return false
+                    if (filtroServicio && t.servicio !== filtroServicio) return false
+                    return true
+                  })
+                  meses.push({ label, total: delMes.reduce((s, t) => s + t.precio, 0), count: delMes.length })
+                }
+                const max = Math.max(...meses.map(m => m.total), 1)
+                const w = 480, h = 220, pad = { top: 20, right: 20, bottom: 40, left: 60 }
+                const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom
+                const stepX = gw / (meses.length - 1 || 1)
+                const puntos = meses.map((m, i) => ({ x: pad.left + i * stepX, y: pad.top + gh - (m.total / max) * gh }))
+                const linePath = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+                return (
+                  <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24, overflowX: 'auto' }}>
+                    <h3 style={{ fontSize: 16, marginBottom: 12 }}>📈 Ventas mensuales (finalizados)</h3>
+                    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
+                      <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
+                      <line x1={pad.left} y1={h - pad.bottom} x2={w - pad.right} y2={h - pad.bottom} stroke="#3a3a3a" />
+                      {puntos.map((p, i) => (
+                        <g key={i}>
+                          <line x1={p.x} y1={pad.top} x2={p.x} y2={h - pad.bottom} stroke="#2a2a2a" strokeDasharray="3,3" />
+                          <text x={p.x} y={h - pad.bottom + 18} textAnchor="middle" fill="#888" fontSize={10}>{meses[i].label}</text>
+                        </g>
+                      ))}
+                      {[0, 0.25, 0.5, 0.75, 1].map(r => {
+                        const y = pad.top + gh * (1 - r)
+                        return <text key={r} x={pad.left - 8} y={y + 4} textAnchor="end" fill="#888" fontSize={10}>{formatearPrecio(Math.round(max * r))}</text>
+                      })}
+                      {puntos.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r={4} fill="#C8862B" />
+                      ))}
+                      <path d={linePath} stroke="#C8862B" strokeWidth={2} fill="none" />
+                      {puntos.map((p, i) => (
+                        <text key={i} x={p.x} y={p.y - 10} textAnchor="middle" fill="#F2EFE9" fontSize={10} fontWeight={700}>
+                          {formatearPrecio(meses[i].total)}
+                        </text>
+                      ))}
+                    </svg>
+                  </div>
+                )
+              })()}
               </>
             )
           })()}
