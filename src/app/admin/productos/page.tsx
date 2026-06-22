@@ -59,7 +59,7 @@ export default function ProductosPage() {
             <input type="number" placeholder="Stock" value={stock} onChange={e => setStock(e.target.value)}
               style={{ width: 70, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             <input type="number" placeholder="% Dto." value={descuento} onChange={e => setDescuento(e.target.value)}
-              style={{ width: 70, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+              style={{ width: 90, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             <input type="number" placeholder="Días validez" value={diasValidez} onChange={e => setDiasValidez(e.target.value)}
               style={{ width: 70, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             <button onClick={guardar}
