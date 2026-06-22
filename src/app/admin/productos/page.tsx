@@ -12,6 +12,11 @@ export default function ProductosPage() {
   const [diasValidez, setDiasValidez] = useState('30')
   const [editId, setEditId] = useState<number | null>(null)
   const [addStock, setAddStock] = useState<{ id: number; qty: string } | null>(null)
+  const [busqueda, setBusqueda] = useState('')
+
+  const filtrados = busqueda.trim()
+    ? productos.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (p.codigo && p.codigo.includes(busqueda)))
+    : productos
 
   useEffect(() => { getProductos().then(setProductos).catch(console.error) }, [])
 
@@ -87,7 +92,9 @@ export default function ProductosPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {productos.map(p => (
+          <input type="text" placeholder="Buscar por nombre o código..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
+            style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, marginBottom: 4 }} />
+          {filtrados.map(p => (
             <div key={p.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{ fontWeight: 700, fontSize: 15 }}><span style={{ color: '#888', fontWeight: 400 }}>#{p.codigo || '--'} </span>{p.nombre}</p>
