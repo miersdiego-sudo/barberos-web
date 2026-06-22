@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, crearTurno, actualizarTurno, type ServicioDB, type HorarioDB } from '@/lib/supabaseClient'
+import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, crearTurno, actualizarTurno, getCreditos, usarCredito, getClienteByCedula, type ServicioDB, type HorarioDB, type CreditoDB } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
 
 const limpieza = 10
@@ -79,6 +79,9 @@ export default function TurnosPage() {
   const [cancelando, setCancelando] = useState(false)
   const [cedulaCancel, setCedulaCancel] = useState('')
   const [misTurnos, setMisTurnos] = useState<any[]>([])
+  const [creditos, setCreditos] = useState<CreditoDB[]>([])
+  const [creditoSel, setCreditoSel] = useState<CreditoDB | null>(null)
+  const [clienteExistente, setClienteExistente] = useState(false)
 
   useEffect(() => {
     getTurnos().then(setTurnos).catch(console.error)
@@ -96,9 +99,21 @@ export default function TurnosPage() {
     ? generarSlots(fecha, servicio, turnos, barbero, horarios)
     : []
 
-  const precioFinal = servicio && promoActiva
-    ? Math.round(servicio.precio * (1 - promoActiva.porcentaje / 100))
-    : servicio?.precio ?? 0
+  const creditosDisponibles = cedula && paso >= 4
+    ? creditos.filter(c => {
+        if (c.usado) return false
+        if (c.cedula !== cedula.trim()) return false
+        if (c.vencimiento && c.vencimiento < new Date().toISOString().split('T')[0]) return false
+        return true
+      })
+    : []
+
+  const precioFinal = (() => {
+    let base = servicio?.precio ?? 0
+    if (promoActiva) base = Math.round(base * (1 - promoActiva.porcentaje / 100))
+    if (creditoSel) base = Math.round(base * (1 - creditoSel.descuento / 100))
+    return base
+  })()
 
   const confirmar = async () => {
     const nuevo = {
@@ -115,6 +130,7 @@ export default function TurnosPage() {
     }
     try {
       await crearTurno(nuevo)
+      if (creditoSel?.id) await usarCredito(creditoSel.id)
       setTurnos([...turnos, nuevo])
       setConfirmado(true)
     } catch (e) {
@@ -133,6 +149,9 @@ export default function TurnosPage() {
     setCedula('')
     setTelefono('')
     setObservaciones('')
+    setCreditoSel(null)
+    setCreditos([])
+    setClienteExistente(false)
     setConfirmado(false)
   }
 
@@ -330,10 +349,21 @@ export default function TurnosPage() {
               <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
               <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
               {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
+              {creditoSel && <p style={{ color: '#D9A441', fontSize: 13 }}>🎯 {creditoSel.descuento}% OFF por compra de producto ✅</p>}
             </div>
-            <input type="text" placeholder="Nombre y Apellido" value={nombre} onChange={e => setNombre(e.target.value)}
-              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
-            <input type="text" placeholder="Nro. de Cédula" value={cedula} onChange={e => setCedula(e.target.value)}
+            <input type="text" placeholder="Nombre y Apellido" value={nombre} onChange={e => setNombre(e.target.value)} readOnly={clienteExistente}
+              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 4, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: clienteExistente ? '#1e1e1e' : '#2B2B2B', color: '#F2EFE9', cursor: clienteExistente ? 'not-allowed' : 'text' }} />
+            {clienteExistente && <p style={{ color: '#888', fontSize: 11, marginBottom: 12, marginTop: 0 }}>Nombre cargado automáticamente. Solo se puede modificar el teléfono.</p>}
+            <input type="text" placeholder="Nro. de Cédula" value={cedula} onChange={async e => {
+              const v = e.target.value; setCedula(v); setCreditoSel(null); setClienteExistente(false)
+              getCreditos().then(setCreditos).catch(() => {})
+              if (v.trim().length >= 3) {
+                try {
+                  const c = await getClienteByCedula(v.trim())
+                  if (c) { setNombre(c.nombre); setTelefono(c.telefono); setClienteExistente(true) }
+                } catch {}
+              }
+            }}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             <p style={{ color: '#888', fontSize: 12, marginBottom: 12 }}>
               Tu cédula se usa para promociones, sorteos de vales y cortes de pelo.
@@ -341,7 +371,20 @@ export default function TurnosPage() {
             <input type="tel" placeholder="WhatsApp" value={telefono} onChange={e => setTelefono(e.target.value)}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             <input type="text" placeholder="Observaciones (opcional)" value={observaciones} onChange={e => setObservaciones(e.target.value)}
-              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 20, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
+              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
+            {creditosDisponibles.length > 0 && (
+              <div style={{ marginBottom: 20, padding: 14, background: '#1A1A1A', borderRadius: 6, border: '1px solid #D9A441' }}>
+                <p style={{ fontSize: 13, color: '#D9A441', marginBottom: 8 }}>🎯 Tenés descuentos disponibles</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {creditosDisponibles.map(c => (
+                    <button key={c.id} onClick={() => setCreditoSel(creditoSel?.id === c.id ? null : c)}
+                      style={{ padding: '8px 12px', background: creditoSel?.id === c.id ? '#C8862B' : '#2B2B2B', color: creditoSel?.id === c.id ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 13, textAlign: 'left' }}>
+                      {creditoSel?.id === c.id ? '✅ ' : ''}{c.descuento}% OFF en tu corte{c.vencimiento ? ` · vence ${c.vencimiento}` : ''}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <button onClick={() => setPaso(5)} disabled={!nombre || !cedula || !telefono}
               style={{
                 padding: '12px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none',
@@ -364,6 +407,7 @@ export default function TurnosPage() {
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
                 {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
+                {creditoSel && <p style={{ color: '#D9A441', fontSize: 13 }}>🎯 {creditoSel.descuento}% OFF por compra de producto ✅</p>}
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cliente:</strong> {nombre}</p>
                 <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cédula:</strong> {cedula}</p>
             <p><strong style={{ color: '#C8862B' }}>WhatsApp:</strong> {telefono}</p>

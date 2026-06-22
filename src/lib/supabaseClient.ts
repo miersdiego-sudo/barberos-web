@@ -53,6 +53,20 @@ export type ProductoDB = {
   nombre: string
   precio: number
   stock: number
+  codigo?: string | null
+  dias_validez?: number | null
+  descuento_corte?: number | null
+  descuento_activo?: boolean
+  created_at?: string
+}
+
+export type CreditoDB = {
+  id?: number
+  cedula: string
+  nombre: string
+  descuento: number
+  usado: boolean
+  vencimiento?: string | null
   created_at?: string
 }
 
@@ -70,6 +84,12 @@ export async function getTurnos() {
   const { data, error } = await supabase.from('turnos').select('*').order('fecha', { ascending: true }).order('inicio', { ascending: true })
   if (error) throw error
   return data as TurnoDB[]
+}
+
+export async function getClienteByCedula(cedula: string) {
+  const { data, error } = await supabase.from('turnos').select('nombre, telefono, cedula').eq('cedula', cedula).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  if (error) throw error
+  return data as { nombre: string; telefono: string; cedula: string } | null
 }
 
 export async function crearTurno(t: TurnoDB) {
@@ -153,8 +173,11 @@ export async function getProductos() {
   return data as ProductoDB[]
 }
 
-export async function crearProducto(p: Omit<ProductoDB, 'id' | 'created_at'>) {
-  const { data, error } = await supabase.from('productos').insert(p).select()
+export async function crearProducto(p: Omit<ProductoDB, 'id' | 'created_at' | 'codigo'>) {
+  const { data: existentes } = await supabase.from('productos').select('codigo').order('codigo', { ascending: false }).limit(1)
+  const ultimo = existentes?.[0]?.codigo ?? '00'
+  const proxCodigo = String(Number(ultimo) + 1).padStart(2, '0')
+  const { data, error } = await supabase.from('productos').insert({ ...p, codigo: proxCodigo }).select()
   if (error) throw error
   return data as ProductoDB[]
 }
@@ -168,6 +191,24 @@ export async function actualizarProducto(id: number, cambios: Partial<ProductoDB
 export async function eliminarProducto(id: number) {
   const { error } = await supabase.from('productos').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function getCreditos() {
+  const { data, error } = await supabase.from('creditos').select('*').order('created_at', { ascending: false })
+  if (error) throw error
+  return data as CreditoDB[]
+}
+
+export async function crearCredito(c: Omit<CreditoDB, 'id' | 'created_at' | 'usado'> & { vencimiento?: string | null }) {
+  const { data, error } = await supabase.from('creditos').insert(c).select()
+  if (error) throw error
+  return data as CreditoDB[]
+}
+
+export async function usarCredito(id: number) {
+  const { data, error } = await supabase.from('creditos').update({ usado: true }).eq('id', id).select()
+  if (error) throw error
+  return data as CreditoDB[]
 }
 
 export async function getHorarios() {
