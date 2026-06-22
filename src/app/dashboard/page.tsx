@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { getTurnos, actualizarTurno, getBarberos, type BarberoDB } from '@/lib/supabaseClient'
+import { getUserInfo, logout } from '@/lib/auth'
 import { config } from '@/lib/config'
 
 type Turno = {
@@ -46,13 +48,24 @@ export default function DashboardPage() {
   const [verGrafico, setVerGrafico] = useState(false)
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
+  }, [])
 
   const cargar = () => {
-    getTurnos().then(setTurnos).catch(console.error)
-    getBarberos().then(setBarberos).catch(console.error)
+    getTurnos(localId ?? undefined).then(setTurnos).catch(console.error)
+    getBarberos(localId ?? undefined).then(setBarberos).catch(console.error)
   }
 
-  useEffect(cargar, [])
+  useEffect(() => { if (localId !== null) cargar() }, [localId])
 
   const [year, month] = mes.split('-').map(Number)
 
@@ -132,6 +145,8 @@ export default function DashboardPage() {
             <a href="/admin/horarios" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Horarios</a>
             <a href="/admin/promociones" style={{ color: '#D9A441', textDecoration: 'none', fontSize: 14 }}>Promociones</a>
             <a href="/admin/ventas" style={{ color: '#27ae60', textDecoration: 'none', fontSize: 14 }}>Ventas</a>
+            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
             <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Nueva reserva</a>
           </div>
         </div>

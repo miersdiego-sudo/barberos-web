@@ -1,14 +1,27 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { getUserInfo, logout } from '@/lib/auth'
 import { getHorarios, actualizarHorario, type HorarioDB } from '@/lib/supabaseClient'
 
 const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
 export default function HorariosPage() {
   const [horarios, setHorarios] = useState<HorarioDB[]>([])
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
 
-  useEffect(() => { getHorarios().then(setHorarios).catch(console.error) }, [])
+  useEffect(() => {
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
+  }, [])
+
+  useEffect(() => { if (localId !== null) getHorarios(localId ?? undefined).then(setHorarios).catch(console.error) }, [localId])
 
   const toggle = async (h: HorarioDB) => {
     try {
@@ -34,7 +47,11 @@ export default function HorariosPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>Horarios</h1>
-          <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

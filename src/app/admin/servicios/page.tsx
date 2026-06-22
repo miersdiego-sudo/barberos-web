@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { getUserInfo, logout } from '@/lib/auth'
 import { getServicios, crearServicio, actualizarServicio, eliminarServicio, type ServicioDB } from '@/lib/supabaseClient'
 
 export default function ServiciosPage() {
@@ -9,8 +11,19 @@ export default function ServiciosPage() {
   const [duracion, setDuracion] = useState('')
   const [precio, setPrecio] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
 
-  useEffect(() => { getServicios().then(setServicios).catch(console.error) }, [])
+  useEffect(() => {
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
+  }, [])
+
+  useEffect(() => { if (localId !== null) getServicios(localId ?? undefined).then(setServicios).catch(console.error) }, [localId])
 
   const guardar = async () => {
     if (!nombre.trim() || !duracion || !precio) return
@@ -33,7 +46,11 @@ export default function ServiciosPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>Servicios</h1>
-          <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
+          </div>
         </div>
 
         <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 24 }}>

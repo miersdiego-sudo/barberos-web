@@ -65,6 +65,10 @@ function generarSlots(fecha: string, servicio: { duracion: number }, turnos: Tur
 }
 
 export default function TurnosPage() {
+  return <TurnosApp />
+}
+
+export function TurnosApp({ localId, localNombre }: { localId?: number; localNombre?: string }) {
   const [paso, setPaso] = useState(1)
   const [barbero, setBarbero] = useState('')
   const [servicio, setServicio] = useState<ServicioDB | null>(null)
@@ -88,12 +92,12 @@ export default function TurnosPage() {
   const [clienteExistente, setClienteExistente] = useState(false)
 
   useEffect(() => {
-    getTurnos().then(setTurnos).catch(console.error)
-    getPromos().then(setPromos).catch(console.error)
-    getBarberos().then(b => setBarberos(b.filter(x => x.activo !== false).map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
-    getServicios().then(setServicios).catch(console.error)
-    getHorarios().then(setHorarios).catch(console.error)
-  }, [])
+    getTurnos(localId).then(setTurnos).catch(console.error)
+    getPromos(localId).then(setPromos).catch(console.error)
+    getBarberos(localId).then(b => setBarberos(b.filter(x => x.activo !== false).map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
+    getServicios(localId).then(setServicios).catch(console.error)
+    getHorarios(localId).then(setHorarios).catch(console.error)
+  }, [localId])
 
   const promoActiva = fecha
     ? promos.find(p => {
@@ -182,7 +186,7 @@ export default function TurnosPage() {
   const buscarMisTurnos = async () => {
     if (!cedulaCancel.trim()) return
     try {
-      const todos = await getTurnos()
+      const todos = await getTurnos(localId)
       setMisTurnos(todos.filter((t: any) => t.cedula === cedulaCancel.trim() && t.estado !== 'cancelado'))
     } catch (e) {
       alert('Error al buscar turnos')
@@ -209,7 +213,7 @@ export default function TurnosPage() {
         <div style={{ textAlign: 'center', maxWidth: 400 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
           <h1 style={{ fontSize: 24, marginBottom: 8 }}>Turno confirmado</h1>
-          <p style={{ color: '#aaa', marginBottom: 24 }}>Te esperamos en {config.nombre}</p>
+          <p style={{ color: '#aaa', marginBottom: 24 }}>Te esperamos en {localNombre || config.nombre}</p>
           <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, textAlign: 'left', marginBottom: 24 }}>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Barbero:</strong> {barbero}</p>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Servicio:</strong> {servicio?.nombre}</p>
@@ -393,10 +397,10 @@ export default function TurnosPage() {
             {clienteExistente && <p style={{ color: '#888', fontSize: 11, marginBottom: 12, marginTop: 0 }}>Nombre cargado automáticamente. Solo se puede modificar el teléfono.</p>}
             <input type="text" placeholder="Nro. de Cédula" value={cedula} onChange={async e => {
               const v = e.target.value; setCedula(v); setCreditoSel(null); setClienteExistente(false)
-              getCreditos().then(setCreditos).catch(() => {})
+              getCreditos(localId).then(setCreditos).catch(() => {})
               if (v.trim().length >= 3) {
                 try {
-                  const c = await getClienteByCedula(v.trim())
+                  const c = await getClienteByCedula(v.trim(), localId)
                   if (c) { setNombre(c.nombre); setTelefono(c.telefono); setClienteExistente(true) }
                 } catch {}
               }

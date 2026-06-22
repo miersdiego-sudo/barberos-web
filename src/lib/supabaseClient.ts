@@ -5,8 +5,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+export type LocalDB = {
+  id: number
+  nombre: string
+  slug: string
+  user_id?: string | null
+  activo?: boolean
+  created_at?: string
+}
+
 export type TurnoDB = {
   id?: number
+  local_id?: number
   barbero: string
   servicio: string
   fecha: string
@@ -23,6 +33,7 @@ export type TurnoDB = {
 
 export type PromoDB = {
   id?: number
+  local_id?: number
   nombre: string
   porcentaje: number
   inicio: string
@@ -33,6 +44,7 @@ export type PromoDB = {
 
 export type BarberoDB = {
   id?: number
+  local_id?: number
   nombre: string
   foto?: string | null
   cedula?: string | null
@@ -43,6 +55,7 @@ export type BarberoDB = {
 
 export type ServicioDB = {
   id?: number
+  local_id?: number
   codigo?: string | null
   nombre: string
   duracion: number
@@ -52,6 +65,7 @@ export type ServicioDB = {
 
 export type ProductoDB = {
   id?: number
+  local_id?: number
   nombre: string
   precio: number
   stock: number
@@ -64,6 +78,7 @@ export type ProductoDB = {
 
 export type CreditoDB = {
   id?: number
+  local_id?: number
   cedula: string
   nombre: string
   descuento: number
@@ -74,6 +89,7 @@ export type CreditoDB = {
 
 export type HorarioDB = {
   id?: number
+  local_id?: number
   dia_semana: number
   activo: boolean
   inicio_manana: string
@@ -82,14 +98,30 @@ export type HorarioDB = {
   fin_tarde: string
 }
 
-export async function getTurnos() {
-  const { data, error } = await supabase.from('turnos').select('*').order('fecha', { ascending: true }).order('inicio', { ascending: true })
+export async function getLocales() {
+  const { data, error } = await supabase.from('locales').select('*').order('nombre')
+  if (error) throw error
+  return data as LocalDB[]
+}
+
+export async function getLocalBySlug(slug: string) {
+  const { data, error } = await supabase.from('locales').select('*').eq('slug', slug).maybeSingle()
+  if (error) throw error
+  return data as LocalDB | null
+}
+
+export async function getTurnos(local_id?: number) {
+  let q = supabase.from('turnos').select('*').order('fecha', { ascending: true }).order('inicio', { ascending: true })
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as TurnoDB[]
 }
 
-export async function getClienteByCedula(cedula: string) {
-  const { data, error } = await supabase.from('turnos').select('nombre, telefono, cedula').eq('cedula', cedula).order('created_at', { ascending: false }).limit(1).maybeSingle()
+export async function getClienteByCedula(cedula: string, local_id?: number) {
+  let q = supabase.from('turnos').select('nombre, telefono, cedula').eq('cedula', cedula).order('created_at', { ascending: false }).limit(1)
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q.maybeSingle()
   if (error) throw error
   return data as { nombre: string; telefono: string; cedula: string } | null
 }
@@ -106,8 +138,10 @@ export async function actualizarTurno(id: number, cambios: Partial<TurnoDB>) {
   return data as TurnoDB[]
 }
 
-export async function getPromos() {
-  const { data, error } = await supabase.from('promociones').select('*').order('inicio', { ascending: false })
+export async function getPromos(local_id?: number) {
+  let q = supabase.from('promociones').select('*').order('inicio', { ascending: false })
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as PromoDB[]
 }
@@ -123,14 +157,16 @@ export async function eliminarPromo(id: number) {
   if (error) throw error
 }
 
-export async function getBarberos() {
-  const { data, error } = await supabase.from('barberos').select('*').order('nombre')
+export async function getBarberos(local_id?: number) {
+  let q = supabase.from('barberos').select('*').order('nombre')
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as BarberoDB[]
 }
 
-export async function crearBarbero(nombre: string) {
-  const { data, error } = await supabase.from('barberos').insert({ nombre }).select()
+export async function crearBarbero(nombre: string, local_id?: number) {
+  const { data, error } = await supabase.from('barberos').insert({ nombre, local_id } as any).select()
   if (error) throw error
   return data as BarberoDB[]
 }
@@ -146,14 +182,16 @@ export async function actualizarBarbero(id: number, cambios: Partial<BarberoDB>)
   return data as BarberoDB[]
 }
 
-export async function getServicios() {
-  const { data, error } = await supabase.from('servicios').select('*').order('nombre')
+export async function getServicios(local_id?: number) {
+  let q = supabase.from('servicios').select('*').order('nombre')
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as ServicioDB[]
 }
 
 export async function crearServicio(s: Omit<ServicioDB, 'id' | 'codigo'>) {
-  const { data: existentes } = await supabase.from('servicios').select('codigo').order('codigo', { ascending: false }).limit(1)
+  const { data: existentes } = await supabase.from('servicios').select('codigo').eq('local_id', s.local_id).order('codigo', { ascending: false }).limit(1)
   const ultimo = existentes?.[0]?.codigo ?? '00'
   const proxCodigo = String(Number(ultimo) + 1).padStart(2, '0')
   const { data, error } = await supabase.from('servicios').insert({ ...s, codigo: proxCodigo }).select()
@@ -172,14 +210,16 @@ export async function eliminarServicio(id: number) {
   if (error) throw error
 }
 
-export async function getProductos() {
-  const { data, error } = await supabase.from('productos').select('*').order('nombre')
+export async function getProductos(local_id?: number) {
+  let q = supabase.from('productos').select('*').order('nombre')
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as ProductoDB[]
 }
 
 export async function crearProducto(p: Omit<ProductoDB, 'id' | 'created_at' | 'codigo'>) {
-  const { data: existentes } = await supabase.from('productos').select('codigo').order('codigo', { ascending: false }).limit(1)
+  const { data: existentes } = await supabase.from('productos').select('codigo').eq('local_id', p.local_id).order('codigo', { ascending: false }).limit(1)
   const ultimo = existentes?.[0]?.codigo ?? '00'
   const proxCodigo = String(Number(ultimo) + 1).padStart(2, '0')
   const { data, error } = await supabase.from('productos').insert({ ...p, codigo: proxCodigo }).select()
@@ -198,8 +238,10 @@ export async function eliminarProducto(id: number) {
   if (error) throw error
 }
 
-export async function getCreditos() {
-  const { data, error } = await supabase.from('creditos').select('*').order('created_at', { ascending: false })
+export async function getCreditos(local_id?: number) {
+  let q = supabase.from('creditos').select('*').order('created_at', { ascending: false })
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as CreditoDB[]
 }
@@ -216,8 +258,10 @@ export async function usarCredito(id: number) {
   return data as CreditoDB[]
 }
 
-export async function getHorarios() {
-  const { data, error } = await supabase.from('horarios').select('*').order('dia_semana')
+export async function getHorarios(local_id?: number) {
+  let q = supabase.from('horarios').select('*').order('dia_semana')
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
   if (error) throw error
   return data as HorarioDB[]
 }

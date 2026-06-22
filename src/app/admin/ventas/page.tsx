@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { getUserInfo, logout } from '@/lib/auth'
 import { getProductos, actualizarProducto, crearCredito, getTurnos, type ProductoDB } from '@/lib/supabaseClient'
 
 export default function VentasPage() {
@@ -11,11 +13,24 @@ export default function VentasPage() {
   const [prodSel, setProdSel] = useState<ProductoDB | null>(null)
   const [cantidad, setCantidad] = useState(1)
   const [mensaje, setMensaje] = useState('')
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    getProductos().then(setProductos).catch(console.error)
-    getTurnos().then(setTurnos).catch(console.error)
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
   }, [])
+
+  useEffect(() => {
+    if (localId !== null) {
+      getProductos(localId ?? undefined).then(setProductos).catch(console.error)
+      getTurnos(localId ?? undefined).then(setTurnos).catch(console.error)
+    }
+  }, [localId])
 
   const clientes = turnos.reduce((acc: any[], t: any) => {
     if (t.cedula && !acc.find(c => c.cedula === t.cedula)) acc.push({ nombre: t.nombre, cedula: t.cedula })
@@ -37,7 +52,7 @@ export default function VentasPage() {
       }
       setMensaje(`✅ Venta registrada. ${prodSel.descuento_corte && prodSel.descuento_activo !== false ? `${prodSel.descuento_corte}% OFF asignado a ${cliente.nombre}.` : ''}`)
       setCliente(null); setProdSel(null); setCantidad(1); setBusqueda('')
-      getProductos().then(setProductos)
+      getProductos(localId ?? undefined).then(setProductos)
     } catch (e) { setMensaje('Error al registrar venta') }
   }
 
@@ -51,7 +66,11 @@ export default function VentasPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 500, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Registrar venta</h1>
-            <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+              {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+              <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
+            </div>
           </div>
 
         <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 16 }}>

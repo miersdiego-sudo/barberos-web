@@ -1,20 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getPromos } from '@/lib/supabaseClient'
-import { config } from '@/lib/config'
+import { getLocales, type LocalDB } from '@/lib/supabaseClient'
 
 export default function Home() {
-  const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string }[]>([])
+  const [locales, setLocales] = useState<LocalDB[]>([])
 
   useEffect(() => {
-    getPromos().then(setPromos).catch(console.error)
+    getLocales().then(setLocales).catch(console.error)
   }, [])
 
   const hoy = new Date()
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
-  const activa = promos.find(p => hoyStr >= p.inicio && hoyStr <= p.fin)
-  const proximas = promos.filter(p => p.inicio > hoyStr).slice(0, 3)
+
+  const localesActivos = locales.filter(l => l.activo !== false)
 
   return (
     <div style={{
@@ -35,18 +34,7 @@ export default function Home() {
         inset: 0,
         backgroundColor: 'rgba(0,0,0,0.6)',
       }} />
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <p style={{
-          color: '#C8862B',
-          letterSpacing: '4px',
-          fontSize: '13px',
-          marginBottom: '8px',
-          textTransform: 'uppercase',
-          fontWeight: 500,
-        }}>
-          Bienvenido a
-        </p>
-
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 600 }}>
         <h1 style={{
           fontSize: '52px',
           fontWeight: 700,
@@ -55,73 +43,48 @@ export default function Home() {
           color: '#F2EFE9',
           letterSpacing: '1px',
         }}>
-          {config.nombre}
+          Barberos
         </h1>
 
         <p style={{
           color: '#b0a8a0',
           maxWidth: '440px',
-          marginBottom: '36px',
+          margin: '0 auto 36px',
           fontSize: '16px',
           lineHeight: 1.6,
         }}>
-          Cortes modernos, barba impecable y cuidado masculino.
-          Reservá tu turno con el barbero que prefieras.
+          Elegí tu barbería y reservá tu turno con el barbero que prefieras.
         </p>
 
-        <a
-          href="/turnos"
-          style={{
-            backgroundColor: '#C8862B',
-            color: '#1A1A1A',
-            padding: '14px 40px',
-            borderRadius: '8px',
-            fontWeight: 700,
-            textDecoration: 'none',
-            fontSize: '16px',
-            display: 'inline-block',
-            transition: '0.2s',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-        >
-          Reservar turno
-        </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+          {localesActivos.map(l => (
+            <a key={l.id} href={`/turnos/${l.slug}`} style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: 360,
+              padding: '16px 24px',
+              background: 'rgba(43,43,43,0.85)',
+              border: '1px solid #3a3a3a',
+              borderRadius: 8,
+              color: '#F2EFE9',
+              textDecoration: 'none',
+              fontSize: 16,
+              fontWeight: 600,
+              transition: '0.2s',
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C8862B'; e.currentTarget.style.background = 'rgba(200,134,43,0.15)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3a3a3a'; e.currentTarget.style.background = 'rgba(43,43,43,0.85)' }}
+            >
+              {l.nombre} →
+            </a>
+          ))}
+        </div>
 
-        {activa && (
-          <div style={{
-            marginTop: '60px',
-            backgroundColor: 'rgba(43,43,43,0.85)',
-            border: '1px solid #D9A441',
-            borderRadius: '8px',
-            padding: '16px 24px',
-            maxWidth: '420px',
-          }}>
-            <p style={{ color: '#D9A441', fontWeight: 700, marginBottom: '4px' }}>
-              🎯 ¡{activa.nombre}!
-            </p>
-            <p style={{ color: '#cfcfcf', fontSize: '14px' }}>
-              {activa.porcentaje}% OFF · válido del {activa.inicio} al {activa.fin}
-            </p>
-          </div>
-        )}
-        {proximas.length > 0 && (
-          <div style={{
-            marginTop: '20px',
-            backgroundColor: 'rgba(43,43,43,0.7)',
-            border: '1px solid #3a3a3a',
-            borderRadius: '8px',
-            padding: '14px 20px',
-            maxWidth: '420px',
-          }}>
-            <p style={{ color: '#888', fontWeight: 600, fontSize: 13, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Próximas promos</p>
-            {proximas.map((p, i) => (
-              <p key={i} style={{ color: '#bbb', fontSize: 13, marginBottom: 4 }}>
-                🗓️ {p.nombre} — {p.porcentaje}% OFF · desde {p.inicio}
-              </p>
-            ))}
-          </div>
-        )}
+        <p style={{ marginTop: 40 }}>
+          <a href="/login" style={{ color: '#666', fontSize: 13, textDecoration: 'none' }}>
+            Admin
+          </a>
+        </p>
       </div>
     </div>
   )

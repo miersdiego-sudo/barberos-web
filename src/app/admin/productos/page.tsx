@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { getUserInfo, logout } from '@/lib/auth'
 import { getProductos, crearProducto, actualizarProducto, eliminarProducto, type ProductoDB } from '@/lib/supabaseClient'
 
 export default function ProductosPage() {
@@ -13,12 +15,23 @@ export default function ProductosPage() {
   const [editId, setEditId] = useState<number | null>(null)
   const [addStock, setAddStock] = useState<{ id: number; qty: string } | null>(null)
   const [busqueda, setBusqueda] = useState('')
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
+  }, [])
 
   const filtrados = busqueda.trim()
     ? productos.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (p.codigo && p.codigo.includes(busqueda)))
     : productos
 
-  useEffect(() => { getProductos().then(setProductos).catch(console.error) }, [])
+  useEffect(() => { if (localId !== null) getProductos(localId ?? undefined).then(setProductos).catch(console.error) }, [localId])
 
   const guardar = async () => {
     if (!nombre.trim() || !precio) return
@@ -49,8 +62,10 @@ export default function ProductosPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>Productos</h1>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
             <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
           </div>
         </div>
 

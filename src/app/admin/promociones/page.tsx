@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { getPromos, crearPromo, eliminarPromo, getServicios, type ServicioDB } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
+import { useRouter } from 'next/navigation'
+import { getUserInfo, logout } from '@/lib/auth'
 
 type Promo = { id?: number; nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }
 
@@ -14,11 +16,24 @@ export default function PromocionesPage() {
   const [inicio, setInicio] = useState('')
   const [fin, setFin] = useState('')
   const [servicio, setServicio] = useState('')
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    getPromos().then(setPromos).catch(console.error)
-    getServicios().then(setServicios).catch(console.error)
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
   }, [])
+
+  useEffect(() => {
+    if (localId !== null) {
+      getPromos(localId ?? undefined).then(setPromos).catch(console.error)
+      getServicios(localId ?? undefined).then(setServicios).catch(console.error)
+    }
+  }, [localId])
 
   const agregar = async () => {
     if (!nombre || !porcentaje || !inicio || !fin) return
@@ -66,7 +81,11 @@ export default function PromocionesPage() {
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Promociones</h1>
             <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
           </div>
-          <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
+          </div>
         </div>
 
         <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 24 }}>

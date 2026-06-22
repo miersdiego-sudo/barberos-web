@@ -3,16 +3,29 @@
 import { useEffect, useState } from 'react'
 import { getBarberos, crearBarbero, actualizarBarbero, supabase, type BarberoDB } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
+import { useRouter } from 'next/navigation'
+import { getUserInfo, logout } from '@/lib/auth'
 
 export default function BarberosPage() {
   const [barberos, setBarberos] = useState<BarberoDB[]>([])
   const [nombre, setNombre] = useState('')
   const [cedula, setCedula] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [localId, setLocalId] = useState<number | null>(null)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    getBarberos().then(setBarberos).catch(console.error)
+    getUserInfo().then(info => {
+      if (!info) { router.push('/login'); return }
+      setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
+    })
   }, [])
+
+  useEffect(() => {
+    if (localId !== null) getBarberos(localId ?? undefined).then(setBarberos).catch(console.error)
+  }, [localId])
 
   const agregar = async () => {
     if (!nombre.trim()) return
@@ -21,7 +34,7 @@ export default function BarberosPage() {
       if (data.length > 0) {
         const id = data[0].id!
         await actualizarBarbero(id, { cedula: cedula.trim() || null, telefono: telefono.trim() || null })
-        getBarberos().then(setBarberos)
+        getBarberos(localId ?? undefined).then(setBarberos)
       }
       setNombre(''); setCedula(''); setTelefono('')
     } catch (e) {
@@ -78,7 +91,11 @@ export default function BarberosPage() {
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Barberos</h1>
             <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
           </div>
-          <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
+          </div>
         </div>
 
         <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 24 }}>
