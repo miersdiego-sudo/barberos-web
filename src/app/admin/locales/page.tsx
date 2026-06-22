@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getLocales, getLocalBySlug, supabase, type LocalDB } from '@/lib/supabaseClient'
+import { getLocales, supabase, type LocalDB } from '@/lib/supabaseClient'
 import { getUserInfo } from '@/lib/auth'
 
 export default function AdminLocalesPage() {
@@ -11,11 +11,13 @@ export default function AdminLocalesPage() {
   const [slug, setSlug] = useState('')
   const [emailAsignar, setEmailAsignar] = useState('')
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     getUserInfo().then(info => {
       if (!info || !info.is_super_admin) { router.push('/login'); return }
+      setUserId(info.id)
       getLocales().then(setLocales).catch(console.error)
       setLoading(false)
     })
@@ -31,11 +33,16 @@ export default function AdminLocalesPage() {
 
   const asignarUsuario = async (localId: number) => {
     if (!emailAsignar.trim()) return
-    const { data: users } = await supabase.auth.admin.listUsers()
-    const user = users?.users.find(u => u.email === emailAsignar.trim())
-    if (!user) { alert('Usuario no encontrado. Debe registrarse primero.'); return }
-    await supabase.from('locales').update({ user_id: user.id }).eq('id', localId)
+    const { data: users } = await supabase.rpc('buscar_usuario_por_email', { email_buscar: emailAsignar.trim() })
+    if (!users) { alert('Usuario no encontrado. Debe registrarse primero.'); return }
+    await supabase.from('locales').update({ user_id: users }).eq('id', localId)
     setEmailAsignar('')
+    getLocales().then(setLocales)
+  }
+
+  const asignarme = async (localId: number) => {
+    if (!userId) return
+    await supabase.from('locales').update({ user_id: userId }).eq('id', localId)
     getLocales().then(setLocales)
   }
 
@@ -70,7 +77,9 @@ export default function AdminLocalesPage() {
                 </div>
               </div>
               {!l.user_id && (
-                <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button onClick={() => asignarme(l.id)} style={{ padding: '8px 12px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Asignarme</button>
+                  <span style={{ color: '#555', fontSize: 12 }}>ó</span>
                   <input type="email" placeholder="Email del dueño" value={emailAsignar} onChange={e => setEmailAsignar(e.target.value)}
                     style={{ flex: 1, padding: 8, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 13 }} />
                   <button onClick={() => asignarUsuario(l.id)} style={{ padding: '8px 12px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Asignar</button>
