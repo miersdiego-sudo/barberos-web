@@ -60,7 +60,7 @@ export default function DashboardPage() {
   })
 
   const barberosFiltro = [...new Set(turnos.map(t => t.barbero))]
-  const totalRecaudado = filtered.reduce((sum, t) => sum + t.precio, 0)
+  const totalRecaudado = filtered.filter(t => t.estado === 'finalizado').reduce((sum, t) => sum + t.precio, 0)
   const dias = diasEnMes(year, month)
 
   const fotoDeBarbero = (nombre: string) => barberos.find(b => b.nombre === nombre)?.foto
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                     <p style={{ fontSize: 16, fontWeight: 700, color: esHoy ? '#C8862B' : esPasado ? '#888' : '#F2EFE9' }}>
                       {fecha} {esHoy && <span style={{ fontSize: 12, color: '#D9A441' }}>(hoy)</span>}
                     </p>
-                    <p style={{ fontSize: 13, color: '#888' }}>{dia.length} turno(s) — {formatearPrecio(dia.reduce((s, t) => s + t.precio, 0))}</p>
+                    <p style={{ fontSize: 13, color: '#888' }}>{dia.length} turno(s) — {formatearPrecio(dia.filter(t => t.estado === 'finalizado').reduce((s, t) => s + t.precio, 0))}</p>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {dia.map(t => {
