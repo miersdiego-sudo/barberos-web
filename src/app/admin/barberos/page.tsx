@@ -115,9 +115,9 @@ export default function BarberosPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {b.foto ? (
                     <img src={b.foto} alt={b.nombre}
-                      style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
+                      style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#888' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 6, background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#888' }}>
                       ?
                     </div>
                   )}

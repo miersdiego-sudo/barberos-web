@@ -182,9 +182,9 @@ export default function DashboardPage() {
                                 {(() => {
                                   const foto = fotoDeBarbero(t.barbero)
                                   return foto ? (
-                                    <img src={foto} alt={t.barbero} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                                    <img src={foto} alt={t.barbero} style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} />
                                   ) : (
-                                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#666' }}>{t.barbero[0]}</div>
+                                    <div style={{ width: 28, height: 28, borderRadius: 4, background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#666' }}>{t.barbero[0]}</div>
                                   )
                                 })()}
                                 <p style={{ fontSize: 14 }}>{t.servicio} · <span style={{ color: '#888' }}>{t.barbero}</span></p>
