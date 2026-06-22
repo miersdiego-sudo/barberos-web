@@ -1,15 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getPromos, crearPromo, eliminarPromo } from '@/lib/supabaseClient'
+import { getPromos, crearPromo, eliminarPromo, serviciosDisponibles } from '@/lib/supabaseClient'
 
-type Promo = {
-  id?: number
-  nombre: string
-  porcentaje: number
-  inicio: string
-  fin: string
-}
+type Promo = { id?: number; nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }
 
 export default function PromocionesPage() {
   const [promos, setPromos] = useState<Promo[]>([])
@@ -17,6 +11,7 @@ export default function PromocionesPage() {
   const [porcentaje, setPorcentaje] = useState('')
   const [inicio, setInicio] = useState('')
   const [fin, setFin] = useState('')
+  const [servicio, setServicio] = useState('')
 
   useEffect(() => {
     getPromos().then(setPromos).catch(console.error)
@@ -25,19 +20,27 @@ export default function PromocionesPage() {
   const agregar = async () => {
     if (!nombre || !porcentaje || !inicio || !fin) return
     try {
-      const data = await crearPromo({ nombre, porcentaje: Number(porcentaje), inicio, fin })
+      const data = await crearPromo({
+        nombre,
+        porcentaje: Number(porcentaje),
+        inicio,
+        fin,
+        servicio: servicio || null,
+      })
       setPromos([...promos, ...data])
       setNombre('')
       setPorcentaje('')
       setInicio('')
       setFin('')
+      setServicio('')
     } catch (e) {
       console.error(e)
       alert('Error al guardar la promoción')
     }
   }
 
-  const eliminar = async (id: number) => {
+  const eliminar = async (id?: number) => {
+    if (!id) return
     try {
       await eliminarPromo(id)
       setPromos(promos.filter(p => p.id !== id))
@@ -69,7 +72,7 @@ export default function PromocionesPage() {
             style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
           <input type="number" placeholder="% descuento" value={porcentaje} onChange={e => setPorcentaje(e.target.value)}
             style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Desde</label>
               <input type="date" value={inicio} onChange={e => setInicio(e.target.value)}
@@ -81,6 +84,11 @@ export default function PromocionesPage() {
                 style={{ width: '100%', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             </div>
           </div>
+          <select value={servicio} onChange={e => setServicio(e.target.value)}
+            style={{ display: 'block', width: '100%', padding: 10, marginBottom: 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }}>
+            <option value="">Todos los servicios</option>
+            {serviciosDisponibles.map(s => <option key={s.nombre} value={s.nombre}>{s.nombre}</option>)}
+          </select>
           <button onClick={agregar} disabled={!nombre || !porcentaje || !inicio || !fin}
             style={{ padding: '10px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: (!nombre || !porcentaje || !inicio || !fin) ? 0.5 : 1 }}>
             Agregar promoción
@@ -100,8 +108,9 @@ export default function PromocionesPage() {
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{p.nombre}</p>
                   <p style={{ color: '#D9A441', fontSize: 13 }}>{p.porcentaje}% OFF</p>
                   <p style={{ color: '#888', fontSize: 12 }}>{p.inicio} → {p.fin}</p>
+                  {p.servicio && <p style={{ color: '#888', fontSize: 12 }}>Solo: {p.servicio}</p>}
                 </div>
-                <button onClick={() => p.id && eliminar(p.id)}
+                <button onClick={() => eliminar(p.id)}
                   style={{ padding: '6px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
                   Eliminar
                 </button>

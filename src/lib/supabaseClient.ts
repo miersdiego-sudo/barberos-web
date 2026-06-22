@@ -13,8 +13,10 @@ export type TurnoDB = {
   inicio: number
   fin: number
   nombre: string
+  cedula: string
   telefono: string
   precio: number
+  estado?: string
   created_at?: string
 }
 
@@ -24,6 +26,13 @@ export type PromoDB = {
   porcentaje: number
   inicio: string
   fin: string
+  servicio?: string | null
+  created_at?: string
+}
+
+export type BarberoDB = {
+  id?: number
+  nombre: string
   created_at?: string
 }
 
@@ -35,6 +44,12 @@ export async function getTurnos() {
 
 export async function crearTurno(t: TurnoDB) {
   const { data, error } = await supabase.from('turnos').insert(t).select()
+  if (error) throw error
+  return data as TurnoDB[]
+}
+
+export async function actualizarTurno(id: number, cambios: Partial<TurnoDB>) {
+  const { data, error } = await supabase.from('turnos').update(cambios).eq('id', id).select()
   if (error) throw error
   return data as TurnoDB[]
 }
@@ -55,3 +70,28 @@ export async function eliminarPromo(id: number) {
   const { error } = await supabase.from('promociones').delete().eq('id', id)
   if (error) throw error
 }
+
+export async function getBarberos() {
+  const { data, error } = await supabase.from('barberos').select('*').order('nombre')
+  if (error) throw error
+  return data as BarberoDB[]
+}
+
+export async function crearBarbero(nombre: string) {
+  const { data, error } = await supabase.from('barberos').insert({ nombre }).select()
+  if (error) throw error
+  return data as BarberoDB[]
+}
+
+export async function eliminarBarbero(id: number) {
+  const { error } = await supabase.from('barberos').delete().eq('id', id)
+  if (error) throw error
+}
+
+export const serviciosDisponibles = [
+  { nombre: 'Corte de Pelo', duracion: 30, precio: 40000 },
+  { nombre: 'Barba', duracion: 20, precio: 20000 },
+  { nombre: 'Corte de Pelo + Barba', duracion: 50, precio: 60000 },
+  { nombre: 'Corte de Pelo + Cejas', duracion: 40, precio: 50000 },
+  { nombre: 'Corte de Pelo + Barba + Cejas', duracion: 60, precio: 70000 },
+]
