@@ -71,9 +71,8 @@ export default function BarberosPage() {
       setEditandoId(null)
       setEditNombre('')
     } catch (e) {
-      console.error(e)
-      const msg = e instanceof Error ? e.message : 'Error al cambiar nombre'
-      alert(msg)
+      console.error('ERROR_RENOMBRAR:', e)
+      alert('ERROR: ' + String(e))
     }
   }
 
