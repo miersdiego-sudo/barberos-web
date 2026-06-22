@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getPromos, crearPromo, eliminarPromo, getServicios, type ServicioDB } from '@/lib/supabaseClient'
+import { config } from '@/lib/config'
 
 type Promo = { id?: number; nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }
 
@@ -63,7 +64,7 @@ export default function PromocionesPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Promociones</h1>
-            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>Barbería DI LOPEZ</p>
+            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
           </div>
           <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
         </div>

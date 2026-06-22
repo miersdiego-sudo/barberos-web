@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getTurnos, actualizarTurno, getBarberos, type BarberoDB } from '@/lib/supabaseClient'
+import { config } from '@/lib/config'
 
 type Turno = {
   id?: number
@@ -121,7 +122,7 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Panel de reservas</h1>
-            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>Barbería DI LOPEZ</p>
+            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <a href="/admin/barberos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Barberos</a>

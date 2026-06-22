@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, crearTurno, actualizarTurno, type ServicioDB, type HorarioDB } from '@/lib/supabaseClient'
+import { config } from '@/lib/config'
 
 const limpieza = 10
 
@@ -165,7 +166,7 @@ export default function TurnosPage() {
         <div style={{ textAlign: 'center', maxWidth: 400 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
           <h1 style={{ fontSize: 24, marginBottom: 8 }}>Turno confirmado</h1>
-          <p style={{ color: '#aaa', marginBottom: 24 }}>Te esperamos en Barbería DI LOPEZ</p>
+          <p style={{ color: '#aaa', marginBottom: 24 }}>Te esperamos en {config.nombre}</p>
           <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, textAlign: 'left', marginBottom: 24 }}>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Barbero:</strong> {barbero}</p>
             <p style={{ marginBottom: 6 }}><strong style={{ color: '#C8862B' }}>Servicio:</strong> {servicio?.nombre}</p>

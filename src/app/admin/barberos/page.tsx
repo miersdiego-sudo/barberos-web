@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getBarberos, crearBarbero, actualizarBarbero, supabase, type BarberoDB } from '@/lib/supabaseClient'
+import { config } from '@/lib/config'
 
 export default function BarberosPage() {
   const [barberos, setBarberos] = useState<BarberoDB[]>([])
@@ -75,7 +76,7 @@ export default function BarberosPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Barberos</h1>
-            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>Barbería DI LOPEZ</p>
+            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
           </div>
           <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
         </div>

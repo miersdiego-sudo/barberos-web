@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getPromos } from '@/lib/supabaseClient'
+import { config } from '@/lib/config'
 
 export default function Home() {
   const [promo, setPromo] = useState<{ nombre: string; porcentaje: number } | null>(null)
@@ -54,7 +55,7 @@ export default function Home() {
           color: '#F2EFE9',
           letterSpacing: '1px',
         }}>
-          Barbería DI LOPEZ
+          {config.nombre}
         </h1>
 
         <p style={{
