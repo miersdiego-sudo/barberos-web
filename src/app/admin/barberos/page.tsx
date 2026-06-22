@@ -8,6 +8,8 @@ type Barbero = { id?: number; nombre: string; foto?: string | null }
 export default function BarberosPage() {
   const [barberos, setBarberos] = useState<Barbero[]>([])
   const [nombre, setNombre] = useState('')
+  const [editandoId, setEditandoId] = useState<number | null>(null)
+  const [editNombre, setEditNombre] = useState('')
 
   useEffect(() => {
     getBarberos().then(setBarberos).catch(console.error)
@@ -48,6 +50,19 @@ export default function BarberosPage() {
     } catch (e) {
       console.error(e)
       alert('Error al subir foto')
+    }
+  }
+
+  const guardarNombre = async (id: number) => {
+    if (!editNombre.trim()) return
+    try {
+      await actualizarBarbero(id, { nombre: editNombre.trim() })
+      setBarberos(barberos.map(b => b.id === id ? { ...b, nombre: editNombre.trim() } : b))
+      setEditandoId(null)
+      setEditNombre('')
+    } catch (e) {
+      console.error(e)
+      alert('Error al cambiar nombre')
     }
   }
 
@@ -96,9 +111,28 @@ export default function BarberosPage() {
                       ?
                     </div>
                   )}
-                  <p style={{ fontWeight: 700, fontSize: 15 }}>{b.nombre}</p>
+                  {editandoId === b.id ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input type="text" value={editNombre} onChange={e => setEditNombre(e.target.value)}
+                        style={{ padding: 6, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, width: 140 }} />
+                      <button onClick={() => b.id && guardarNombre(b.id)}
+                        style={{ padding: '6px 10px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                        Guardar
+                      </button>
+                      <button onClick={() => { setEditandoId(null); setEditNombre('') }}
+                        style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                        X
+                      </button>
+                    </div>
+                  ) : (
+                    <p style={{ fontWeight: 700, fontSize: 15 }}>{b.nombre}</p>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => { setEditandoId(b.id ?? null); setEditNombre(b.nombre) }}
+                    style={{ padding: '6px 10px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                    Nombre
+                  </button>
                   <label style={{ padding: '6px 10px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
                     Foto
                     <input type="file" accept="image/*" style={{ display: 'none' }}
