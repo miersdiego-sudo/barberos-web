@@ -137,7 +137,8 @@ export default function TurnosPage() {
   const cancelarTurno = async (id: number) => {
     try {
       await actualizarTurno(id, { estado: 'cancelado' })
-      setMisTurnos(misTurnos.filter((t: any) => t.id !== id))
+      setCedulaCancel('')
+      setMisTurnos([])
       alert('Turno cancelado')
     } catch (e) {
       alert('Error al cancelar turno')
