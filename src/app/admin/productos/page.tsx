@@ -51,17 +51,32 @@ export default function ProductosPage() {
         </div>
 
         <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 24 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <input type="text" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)}
-              style={{ flex: '1 1 120px', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-            <input type="number" placeholder="Precio" value={precio} onChange={e => setPrecio(e.target.value)}
-              style={{ width: 100, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-            <input type="number" placeholder="Stock" value={stock} onChange={e => setStock(e.target.value)}
-              style={{ width: 70, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-            <input type="number" placeholder="% Dto." value={descuento} onChange={e => setDescuento(e.target.value)}
-              style={{ width: 90, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-            <input type="number" placeholder="Días validez" value={diasValidez} onChange={e => setDiasValidez(e.target.value)}
-              style={{ width: 70, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 120px' }}>
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Nombre</label>
+              <input type="text" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)}
+                style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: 100 }}>
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Precio</label>
+              <input type="number" placeholder="Precio" value={precio} onChange={e => setPrecio(e.target.value)}
+                style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: 70 }}>
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Stock</label>
+              <input type="number" placeholder="Stock" value={stock} onChange={e => setStock(e.target.value)}
+                style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: 90 }}>
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>% Dto. corte</label>
+              <input type="number" placeholder="ej: 20" value={descuento} onChange={e => setDescuento(e.target.value)}
+                style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: 80 }}>
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Válido (días)</label>
+              <input type="number" placeholder="ej: 30" value={diasValidez} onChange={e => setDiasValidez(e.target.value)}
+                style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+            </div>
             <button onClick={guardar}
               style={{ padding: '10px 16px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
               {editId ? 'Actualizar' : 'Agregar'}
