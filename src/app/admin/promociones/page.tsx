@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { getPromos, crearPromo, eliminarPromo } from '@/lib/supabaseClient'
 
 type Promo = {
-  id: number
+  id?: number
   nombre: string
   porcentaje: number
   inicio: string
@@ -91,8 +91,8 @@ export default function PromocionesPage() {
           <p style={{ textAlign: 'center', color: '#666', padding: 40 }}>No hay promociones creadas.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {promos.map(p => (
-              <div key={p.id} style={{
+            {promos.map((p, i) => (
+              <div key={p.id ?? i} style={{
                 background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
@@ -101,7 +101,7 @@ export default function PromocionesPage() {
                   <p style={{ color: '#D9A441', fontSize: 13 }}>{p.porcentaje}% OFF</p>
                   <p style={{ color: '#888', fontSize: 12 }}>{p.inicio} → {p.fin}</p>
                 </div>
-                <button onClick={() => eliminar(p.id)}
+                <button onClick={() => p.id && eliminar(p.id)}
                   style={{ padding: '6px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
                   Eliminar
                 </button>
