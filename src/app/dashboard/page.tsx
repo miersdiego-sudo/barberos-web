@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [barberos, setBarberos] = useState<BarberoDB[]>([])
   const [verClientes, setVerClientes] = useState(false)
   const [verInactivos, setVerInactivos] = useState(false)
+  const [diasInactivo, setDiasInactivo] = useState(30)
   const [verGrafico, setVerGrafico] = useState(false)
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
@@ -189,7 +190,7 @@ export default function DashboardPage() {
             const hoyDate = new Date()
             const clientesInactivos = Object.values(clientes).filter(c => {
               const diff = Math.floor((hoyDate.getTime() - new Date(c.ultima + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24))
-              return diff > 30
+              return diff > diasInactivo
             }).sort((a, b) => a.ultima.localeCompare(b.ultima))
             return (
               <>
@@ -218,8 +219,17 @@ export default function DashboardPage() {
                 </button>
                 <button onClick={() => setVerInactivos(!verInactivos)}
                   style={{ padding: '8px 14px', background: verInactivos ? '#e74c3c' : '#2B2B2B', color: verInactivos ? '#fff' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-                  ⏰ Inactivos (+30 días)
+                  ⏰ Clientes inactivos (+{diasInactivo}d)
                 </button>
+                {verInactivos && (
+                  <select value={diasInactivo} onChange={e => setDiasInactivo(Number(e.target.value))}
+                    style={{ padding: '8px', background: '#2B2B2B', color: '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 13 }}>
+                    <option value={15}>+15 días</option>
+                    <option value={30}>+30 días</option>
+                    <option value={60}>+60 días</option>
+                    <option value={90}>+90 días</option>
+                  </select>
+                )}
               </div>
 
               {verClientes && (
@@ -245,7 +255,7 @@ export default function DashboardPage() {
 
               {verInactivos && (
                 <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #e74c3c', marginBottom: 24 }}>
-                  <h3 style={{ fontSize: 16, marginBottom: 12, color: '#e74c3c' }}>⏰ Clientes que no reservan hace +30 días</h3>
+                  <h3 style={{ fontSize: 16, marginBottom: 12, color: '#e74c3c' }}>⏰ Clientes que no reservan hace +{diasInactivo} días</h3>
                   {clientesInactivos.length === 0 ? (
                     <p style={{ color: '#888', fontSize: 13 }}>Todos los clientes reservaron en los últimos 30 días.</p>
                   ) : (
