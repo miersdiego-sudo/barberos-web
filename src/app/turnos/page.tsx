@@ -193,9 +193,9 @@ export default function TurnosPage() {
                     borderRadius: 10, fontSize: 15, background: barbero === b.nombre ? '#2B2B2B' : '#1E1E1E', color: '#F2EFE9',
                   }}>
                   {b.foto ? (
-                    <img src={b.foto} alt={b.nombre} style={{ width: 80, height: 80, borderRadius: 6, objectFit: 'cover' }} />
+                    <img src={b.foto} alt={b.nombre} style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 6, objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: 80, height: 80, borderRadius: 6, background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#888' }}>
+                    <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 6, background: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#888' }}>
                       {b.nombre[0]}
                     </div>
                   )}
