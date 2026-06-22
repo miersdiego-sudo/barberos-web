@@ -50,7 +50,6 @@ export default function ProductosPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>Productos</h1>
           <div style={{ display: 'flex', gap: 8 }}>
-            <a href="/admin/ventas" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Ventas</a>
             <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
           </div>
         </div>

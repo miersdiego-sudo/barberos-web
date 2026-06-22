@@ -131,6 +131,7 @@ export default function DashboardPage() {
             <a href="/admin/productos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Productos</a>
             <a href="/admin/horarios" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Horarios</a>
             <a href="/admin/promociones" style={{ color: '#D9A441', textDecoration: 'none', fontSize: 14 }}>Promociones</a>
+            <a href="/admin/ventas" style={{ color: '#27ae60', textDecoration: 'none', fontSize: 14 }}>Ventas</a>
             <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Nueva reserva</a>
           </div>
         </div>

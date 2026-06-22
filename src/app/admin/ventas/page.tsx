@@ -49,10 +49,10 @@ export default function VentasPage() {
     }}>
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)' }} />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 500, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700 }}>Registrar venta</h1>
-          <a href="/admin/productos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Productos</a>
-        </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700 }}>Registrar venta</h1>
+            <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
+          </div>
 
         <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 16 }}>
           <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#888' }}>Cliente</label>
