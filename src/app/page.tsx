@@ -5,16 +5,16 @@ import { getPromos } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
 
 export default function Home() {
-  const [promo, setPromo] = useState<{ nombre: string; porcentaje: number } | null>(null)
+  const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string }[]>([])
 
   useEffect(() => {
-    getPromos().then(list => {
-      const hoy = new Date()
-      const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
-      const activa = list.find(p => hoyStr >= p.inicio && hoyStr <= p.fin)
-      if (activa) setPromo(activa)
-    }).catch(console.error)
+    getPromos().then(setPromos).catch(console.error)
   }, [])
+
+  const hoy = new Date()
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+  const activa = promos.find(p => hoyStr >= p.inicio && hoyStr <= p.fin)
+  const proximas = promos.filter(p => p.inicio > hoyStr).slice(0, 3)
 
   return (
     <div style={{
@@ -88,21 +88,38 @@ export default function Home() {
           Reservar turno
         </a>
 
-        {promo && (
+        {activa && (
           <div style={{
             marginTop: '60px',
             backgroundColor: 'rgba(43,43,43,0.85)',
-            border: '1px solid #3a3a3a',
+            border: '1px solid #D9A441',
             borderRadius: '8px',
             padding: '16px 24px',
             maxWidth: '420px',
           }}>
             <p style={{ color: '#D9A441', fontWeight: 700, marginBottom: '4px' }}>
-              ¡{promo.nombre}!
+              🎯 ¡{activa.nombre}!
             </p>
             <p style={{ color: '#cfcfcf', fontSize: '14px' }}>
-              {promo.porcentaje}% OFF en todos los servicios.
+              {activa.porcentaje}% OFF · válido del {activa.inicio} al {activa.fin}
             </p>
+          </div>
+        )}
+        {proximas.length > 0 && (
+          <div style={{
+            marginTop: '20px',
+            backgroundColor: 'rgba(43,43,43,0.7)',
+            border: '1px solid #3a3a3a',
+            borderRadius: '8px',
+            padding: '14px 20px',
+            maxWidth: '420px',
+          }}>
+            <p style={{ color: '#888', fontWeight: 600, fontSize: 13, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Próximas promos</p>
+            {proximas.map((p, i) => (
+              <p key={i} style={{ color: '#bbb', fontSize: 13, marginBottom: 4 }}>
+                🗓️ {p.nombre} — {p.porcentaje}% OFF · desde {p.inicio}
+              </p>
+            ))}
           </div>
         )}
       </div>
