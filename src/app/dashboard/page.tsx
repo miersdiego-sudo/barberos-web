@@ -38,6 +38,8 @@ export default function DashboardPage() {
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nuevoBarbero, setNuevoBarbero] = useState('')
   const [barberos, setBarberos] = useState<BarberoDB[]>([])
+  const [verClientes, setVerClientes] = useState(false)
+  const [verInactivos, setVerInactivos] = useState(false)
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
 
@@ -160,13 +162,28 @@ export default function DashboardPage() {
             const pendientes = filtered.filter(t => !t.estado || t.estado === 'pendiente').length
             const barberoCount: Record<string, number> = {}
             const servicioCount: Record<string, number> = {}
-            filtered.forEach(t => {
+            const clientes: Record<string, { nombre: string; cedula: string; telefono: string; total: number; ultima: string }> = {}
+            turnos.forEach(t => {
               barberoCount[t.barbero] = (barberoCount[t.barbero] || 0) + 1
               servicioCount[t.servicio] = (servicioCount[t.servicio] || 0) + 1
+              if (t.cedula) {
+                if (!clientes[t.cedula] || t.fecha > clientes[t.cedula].ultima) {
+                  clientes[t.cedula] = { nombre: t.nombre, cedula: t.cedula, telefono: t.telefono, total: (clientes[t.cedula]?.total || 0) + 1, ultima: t.fecha }
+                } else {
+                  clientes[t.cedula].total++
+                }
+              }
             })
             const topBarbero = Object.entries(barberoCount).sort((a, b) => b[1] - a[1])[0]
             const topServicio = Object.entries(servicioCount).sort((a, b) => b[1] - a[1])[0]
+            const clientesTop = Object.values(clientes).sort((a, b) => b.total - a.total).slice(0, 10)
+            const hoyDate = new Date()
+            const clientesInactivos = Object.values(clientes).filter(c => {
+              const diff = Math.floor((hoyDate.getTime() - new Date(c.ultima + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24))
+              return diff > 30
+            }).sort((a, b) => a.ultima.localeCompare(b.ultima))
             return (
+              <>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
                 <div style={{ padding: '8px 14px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
                   ✅ Finalizados: <strong style={{ color: '#27ae60' }}>{finalizados}</strong>
@@ -184,6 +201,67 @@ export default function DashboardPage() {
                   ✂️ Servicio top: <strong style={{ color: '#C8862B' }}>{topServicio[0]}</strong> ({topServicio[1]})
                 </div>}
               </div>
+
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                <button onClick={() => setVerClientes(!verClientes)}
+                  style={{ padding: '8px 14px', background: verClientes ? '#C8862B' : '#2B2B2B', color: verClientes ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+                  🏆 Clientes top
+                </button>
+                <button onClick={() => setVerInactivos(!verInactivos)}
+                  style={{ padding: '8px 14px', background: verInactivos ? '#e74c3c' : '#2B2B2B', color: verInactivos ? '#fff' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+                  ⏰ Inactivos (+30 días)
+                </button>
+              </div>
+
+              {verClientes && (
+                <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24 }}>
+                  <h3 style={{ fontSize: 16, marginBottom: 12 }}>🏆 Clientes con más visitas</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {clientesTop.map((c, i) => (
+                      <div key={c.cedula} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#1A1A1A', borderRadius: 6, fontSize: 13 }}>
+                        <div>
+                          <span style={{ color: '#C8862B', fontWeight: 700, marginRight: 8 }}>#{i + 1}</span>
+                          <strong>{c.nombre}</strong>
+                          <span style={{ color: '#888', marginLeft: 8 }}>C.I. {c.cedula}</span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ color: '#C8862B', fontWeight: 700 }}>{c.total} turnos</span>
+                          <span style={{ color: '#888', marginLeft: 8 }}>Último: {c.ultima}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {verInactivos && (
+                <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #e74c3c', marginBottom: 24 }}>
+                  <h3 style={{ fontSize: 16, marginBottom: 12, color: '#e74c3c' }}>⏰ Clientes que no reservan hace +30 días</h3>
+                  {clientesInactivos.length === 0 ? (
+                    <p style={{ color: '#888', fontSize: 13 }}>Todos los clientes reservaron en los últimos 30 días.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {clientesInactivos.map(c => {
+                        const diff = Math.floor((hoyDate.getTime() - new Date(c.ultima + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24))
+                        return (
+                          <div key={c.cedula} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#1A1A1A', borderRadius: 6, fontSize: 13 }}>
+                            <div>
+                              <strong>{c.nombre}</strong>
+                              <span style={{ color: '#888', marginLeft: 8 }}>C.I. {c.cedula}</span>
+                              <span style={{ color: '#888', marginLeft: 8 }}>📞 {c.telefono}</span>
+                            </div>
+                            <div>
+                              <span style={{ color: '#e74c3c', fontWeight: 700 }}>{diff} días sin venir</span>
+                              <span style={{ color: '#888', marginLeft: 8 }}>Último: {c.ultima}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+              </>
             )
           })()}
 
