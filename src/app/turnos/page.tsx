@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getTurnos, getPromos, getBarberos, crearTurno, serviciosDisponibles } from '@/lib/supabaseClient'
+import { getTurnos, getPromos, getBarberos, crearTurno, actualizarTurno, serviciosDisponibles } from '@/lib/supabaseClient'
 
 const limpieza = 10
 
@@ -68,6 +68,9 @@ export default function TurnosPage() {
   const [confirmado, setConfirmado] = useState(false)
   const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }[]>([])
   const [barberos, setBarberos] = useState<{ nombre: string; foto?: string | null }[]>([])
+  const [cancelando, setCancelando] = useState(false)
+  const [cedulaCancel, setCedulaCancel] = useState('')
+  const [misTurnos, setMisTurnos] = useState<any[]>([])
 
   useEffect(() => {
     getTurnos().then(setTurnos).catch(console.error)
@@ -119,6 +122,26 @@ export default function TurnosPage() {
     setCedula('')
     setTelefono('')
     setConfirmado(false)
+  }
+
+  const buscarMisTurnos = async () => {
+    if (!cedulaCancel.trim()) return
+    try {
+      const todos = await getTurnos()
+      setMisTurnos(todos.filter((t: any) => t.cedula === cedulaCancel.trim() && t.estado !== 'cancelado'))
+    } catch (e) {
+      alert('Error al buscar turnos')
+    }
+  }
+
+  const cancelarTurno = async (id: number) => {
+    try {
+      await actualizarTurno(id, { estado: 'cancelado' })
+      setMisTurnos(misTurnos.filter((t: any) => t.id !== id))
+      alert('Turno cancelado')
+    } catch (e) {
+      alert('Error al cancelar turno')
+    }
   }
 
   if (confirmado) {
@@ -315,30 +338,69 @@ export default function TurnosPage() {
           </>
         )}
 
-        {paso === 5 && (
-          <>
-            <h2 style={{ fontSize: 18, marginBottom: 16, color: '#ccc' }}>Confirmar turno</h2>
-            <div style={{ marginBottom: 20, padding: 16, background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Barbero:</strong> {barbero}</p>
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Servicio:</strong> {servicio?.nombre} ({servicio?.duracion} min)</p>
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Fecha:</strong> {fecha}</p>
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
-              {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cliente:</strong> {nombre}</p>
-              <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cédula:</strong> {cedula}</p>
-              <p><strong style={{ color: '#C8862B' }}>WhatsApp:</strong> {telefono}</p>
+          {paso === 5 && (
+            <>
+              <h2 style={{ fontSize: 18, marginBottom: 16, color: '#ccc' }}>Confirmar turno</h2>
+              <div style={{ marginBottom: 20, padding: 16, background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Barbero:</strong> {barbero}</p>
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Servicio:</strong> {servicio?.nombre} ({servicio?.duracion} min)</p>
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Fecha:</strong> {fecha}</p>
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Horario:</strong> {horario} — {aHora(aMinutos(horario) + servicio!.duracion)}</p>
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
+                {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{promoActiva.porcentaje}% OFF ({promoActiva.nombre}) ✅</p>}
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cliente:</strong> {nombre}</p>
+                <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Cédula:</strong> {cedula}</p>
+                <p><strong style={{ color: '#C8862B' }}>WhatsApp:</strong> {telefono}</p>
+              </div>
+              <button onClick={confirmar}
+                style={{
+                  padding: '12px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none',
+                  borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16, width: '100%',
+                }}>
+                Confirmar turno
+              </button>
+              <button onClick={() => setPaso(4)} style={{ display: 'block', marginTop: 16, background: 'none', border: 'none', color: '#C8862B', cursor: 'pointer', fontSize: 14 }}>← Volver</button>
+            </>
+          )}
+
+          {!cancelando ? (
+            <p style={{ textAlign: 'center', marginTop: 40 }}>
+              <button onClick={() => setCancelando(true)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>
+                ¿Cancelar un turno?
+              </button>
+            </p>
+          ) : (
+            <div style={{ marginTop: 40, padding: 20, background: '#2B2B2B', borderRadius: 8, border: '1px solid #3a3a3a' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ fontSize: 16, color: '#e74c3c', margin: 0 }}>Cancelar turno</h3>
+                <button onClick={() => { setCancelando(false); setCedulaCancel(''); setMisTurnos([]) }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14 }}>X</button>
+              </div>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 14, color: '#888' }}>Ingresá tu número de cédula</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input type="text" placeholder="Nro. de Cédula" value={cedulaCancel} onChange={e => setCedulaCancel(e.target.value)}
+                  style={{ flex: 1, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+                <button onClick={buscarMisTurnos} style={{ padding: '10px 20px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+                  Buscar
+                </button>
+              </div>
+              {misTurnos.length > 0 && (
+                <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {misTurnos.map((t: any) => (
+                    <div key={t.id} style={{ padding: 12, background: '#1A1A1A', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 13 }}>
+                      <p><strong style={{ color: '#C8862B' }}>{t.servicio}</strong> · {t.barbero}</p>
+                      <p style={{ color: '#aaa' }}>{t.fecha} — {aHora(t.inicio)} a {aHora(t.fin)}</p>
+                      <button onClick={() => t.id && cancelarTurno(t.id)} style={{ marginTop: 8, padding: '6px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                        Cancelar este turno
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {misTurnos.length === 0 && cedulaCancel && (
+                <p style={{ color: '#888', fontSize: 13, marginTop: 12 }}>No se encontraron turnos pendientes con esa cédula.</p>
+              )}
             </div>
-            <button onClick={confirmar}
-              style={{
-                padding: '12px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none',
-                borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16, width: '100%',
-              }}>
-              Confirmar turno
-            </button>
-            <button onClick={() => setPaso(4)} style={{ display: 'block', marginTop: 16, background: 'none', border: 'none', color: '#C8862B', cursor: 'pointer', fontSize: 14 }}>← Volver</button>
-          </>
-        )}
+          )}
       </div>
       </div>
     </div>
