@@ -9,9 +9,9 @@ export default function AdminLocalesPage() {
   const [locales, setLocales] = useState<LocalDB[]>([])
   const [nombre, setNombre] = useState('')
   const [slug, setSlug] = useState('')
-  const [emailAsignar, setEmailAsignar] = useState('')
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [emails, setEmails] = useState<Record<number, string>>({})
   const router = useRouter()
 
   useEffect(() => {
@@ -32,11 +32,12 @@ export default function AdminLocalesPage() {
   }
 
   const asignarUsuario = async (localId: number) => {
-    if (!emailAsignar.trim()) return
-    const { data: users } = await supabase.rpc('buscar_usuario_por_email', { email_buscar: emailAsignar.trim() })
+    const email = emails[localId]
+    if (!email?.trim()) return
+    const { data: users } = await supabase.rpc('buscar_usuario_por_email', { email_buscar: email.trim() })
     if (!users) { alert('Usuario no encontrado. Debe registrarse primero.'); return }
     await supabase.from('locales').update({ user_id: users }).eq('id', localId)
-    setEmailAsignar('')
+    setEmails(e => { const n = { ...e }; delete n[localId]; return n })
     getLocales().then(setLocales)
   }
 
@@ -80,7 +81,7 @@ export default function AdminLocalesPage() {
                 <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
                   <button onClick={() => asignarme(l.id)} style={{ padding: '8px 12px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Asignarme</button>
                   <span style={{ color: '#555', fontSize: 12 }}>ó</span>
-                  <input type="email" placeholder="Email del dueño" value={emailAsignar} onChange={e => setEmailAsignar(e.target.value)}
+                  <input type="email" placeholder="Email del dueño" value={emails[l.id] || ''} onChange={e => setEmails(prev => ({ ...prev, [l.id]: e.target.value }))}
                     style={{ flex: 1, padding: 8, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 13 }} />
                   <button onClick={() => asignarUsuario(l.id)} style={{ padding: '8px 12px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Asignar</button>
                 </div>
