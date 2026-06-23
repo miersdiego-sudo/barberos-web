@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { login, signup } from '@/lib/auth'
+import { login } from '@/lib/auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
+  const [nombreLocal, setNombreLocal] = useState('')
   const [registrando, setRegistrando] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -16,8 +17,13 @@ export default function LoginPage() {
     setError('')
     try {
       if (registrando) {
-        await signup(email, pass)
-        alert('Registrado. Esperá a que el administrador te asigne un local.')
+        const res = await fetch('/api/registrar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass, nombre_local: nombreLocal }),
+        })
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
+        alert('Registrado. El administrador va a revisar y activar tu local.')
       } else {
         await login(email, pass)
         router.push('/dashboard')
@@ -31,12 +37,16 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <form onSubmit={handleSubmit} style={{ background: '#2B2B2B', padding: 32, borderRadius: 8, border: '1px solid #3a3a3a', width: '100%', maxWidth: 360 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#F2EFE9', marginBottom: 24, textAlign: 'center' }}>
-          {registrando ? 'Registrarse' : 'Iniciar sesión'}
+          {registrando ? 'Registrar tu barbería' : 'Iniciar sesión'}
         </h1>
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
           style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
         <input type="password" placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} required
-          style={{ display: 'block', width: '100%', padding: 10, marginBottom: 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+          style={{ display: 'block', width: '100%', padding: 10, marginBottom: registrando ? 12 : 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+        {registrando && (
+          <input type="text" placeholder="Nombre de tu barbería/peluquería" value={nombreLocal} onChange={e => setNombreLocal(e.target.value)} required
+            style={{ display: 'block', width: '100%', padding: 10, marginBottom: 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+        )}
         {error && <p style={{ color: '#e74c3c', fontSize: 13, marginBottom: 12 }}>{error}</p>}
         <button type="submit" style={{ width: '100%', padding: 12, background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16, marginBottom: 12 }}>
           {registrando ? 'Registrarse' : 'Ingresar'}

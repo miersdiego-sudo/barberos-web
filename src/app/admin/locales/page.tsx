@@ -7,11 +7,8 @@ import { getUserInfo } from '@/lib/auth'
 
 export default function AdminLocalesPage() {
   const [locales, setLocales] = useState<LocalDB[]>([])
-  const [nombre, setNombre] = useState('')
-  const [slug, setSlug] = useState('')
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
-  const [emails, setEmails] = useState<Record<number, string>>({})
   const router = useRouter()
 
   useEffect(() => {
@@ -23,31 +20,15 @@ export default function AdminLocalesPage() {
     })
   }, [])
 
-  const crear = async () => {
-    if (!nombre.trim() || !slug.trim()) return
-    const { error } = await supabase.from('locales').insert({ nombre: nombre.trim(), slug: slug.trim() })
-    if (error) { alert('Error: ' + error.message); return }
-    setNombre(''); setSlug('')
-    getLocales().then(setLocales)
-  }
-
-  const asignarUsuario = async (localId: number) => {
-    const email = emails[localId]
-    if (!email?.trim()) return
-    const { data: users } = await supabase.rpc('buscar_usuario_por_email', { email_buscar: email.trim() })
-    if (!users) { alert('Usuario no encontrado. Debe registrarse primero.'); return }
-    await supabase.from('locales').update({ user_id: users }).eq('id', localId)
-    setEmails(e => { const n = { ...e }; delete n[localId]; return n })
-    getLocales().then(setLocales)
-  }
-
-  const asignarme = async (localId: number) => {
-    if (!userId) return
-    await supabase.from('locales').update({ user_id: userId }).eq('id', localId)
+  const aprobar = async (localId: number) => {
+    await supabase.from('locales').update({ activo: true }).eq('id', localId)
     getLocales().then(setLocales)
   }
 
   if (loading) return <div style={{ padding: 40, color: '#888' }}>Cargando...</div>
+
+  const pendientes = locales.filter(l => l.activo === false)
+  const activas = locales.filter(l => l.activo !== false)
 
   return (
     <div style={{ minHeight: '100vh', background: '#1A1A1A', color: '#F2EFE9', fontFamily: 'sans-serif', padding: '40px 20px' }}>
@@ -57,38 +38,41 @@ export default function AdminLocalesPage() {
           <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
         </div>
 
-        <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 20, border: '1px solid #3a3a3a', marginBottom: 24, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input type="text" placeholder="Nombre del local" value={nombre} onChange={e => setNombre(e.target.value)}
-            style={{ flex: 1, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-          <input type="text" placeholder="Slug (ej: dilopez)" value={slug} onChange={e => setSlug(e.target.value)}
-            style={{ width: 120, padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-          <button onClick={crear} style={{ padding: '10px 16px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Crear</button>
-        </div>
+        {pendientes.length > 0 && (
+          <>
+            <h2 style={{ fontSize: 16, color: '#D9A441', marginBottom: 12 }}>Solicitudes pendientes ({pendientes.length})</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
+              {pendientes.map(l => (
+                <div key={l.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #D9A441' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
+                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? 'Dueño registrado' : '⏳ Sin dueño'}</p>
+                    </div>
+                    <button onClick={() => aprobar(l.id)} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Aprobar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
+        <h2 style={{ fontSize: 16, color: '#888', marginBottom: 12 }}>Locales activos ({activas.length})</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {locales.map(l => (
+          {activas.map(l => (
             <div key={l.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}{l.activo !== false ? '' : ' · ⛔ Inactivo'}</p>
+                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}</p>
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
-                </div>
+                <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
               </div>
-              {!l.user_id && (
-                <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <button onClick={() => asignarme(l.id)} style={{ padding: '8px 12px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Asignarme</button>
-                  <span style={{ color: '#555', fontSize: 12 }}>ó</span>
-                  <input type="email" placeholder="Email del dueño" value={emails[l.id] || ''} onChange={e => setEmails(prev => ({ ...prev, [l.id]: e.target.value }))}
-                    style={{ flex: 1, padding: 8, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 13 }} />
-                  <button onClick={() => asignarUsuario(l.id)} style={{ padding: '8px 12px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Asignar</button>
-                </div>
-              )}
             </div>
           ))}
         </div>
+
+        {locales.length === 0 && <p style={{ color: '#666', textAlign: 'center', marginTop: 40 }}>No hay locales registrados</p>}
       </div>
     </div>
   )
