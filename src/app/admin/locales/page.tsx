@@ -25,6 +25,12 @@ export default function AdminLocalesPage() {
     getLocales().then(setLocales)
   }
 
+  const eliminar = async (localId: number) => {
+    if (!confirm('¿Eliminar este local? Se borrarán todos sus datos.')) return
+    await supabase.from('locales').delete().eq('id', localId)
+    getLocales().then(setLocales)
+  }
+
   if (loading) return <div style={{ padding: 40, color: '#888' }}>Cargando...</div>
 
   const pendientes = locales.filter(l => l.activo === false)
@@ -50,6 +56,7 @@ export default function AdminLocalesPage() {
                       <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? 'Dueño registrado' : '⏳ Sin dueño'}</p>
                     </div>
                     <button onClick={() => aprobar(l.id)} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Aprobar</button>
+                    <button onClick={() => eliminar(l.id)} style={{ padding: '8px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12, marginLeft: 6 }}>Eliminar</button>
                   </div>
                 </div>
               ))}
@@ -66,7 +73,10 @@ export default function AdminLocalesPage() {
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
                   <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}</p>
                 </div>
-                <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
+                  <button onClick={() => eliminar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+                </div>
               </div>
             </div>
           ))}
