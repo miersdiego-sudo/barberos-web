@@ -8,7 +8,8 @@ import { getProductos, crearProducto, actualizarProducto, eliminarProducto, type
 export default function ProductosPage() {
   const [productos, setProductos] = useState<ProductoDB[]>([])
   const [nombre, setNombre] = useState('')
-  const [precio, setPrecio] = useState('')
+  const [costo, setCosto] = useState('')
+  const [venta, setVenta] = useState('')
   const [stock, setStock] = useState('')
   const [descuento, setDescuento] = useState('')
   const [diasValidez, setDiasValidez] = useState('30')
@@ -34,13 +35,13 @@ export default function ProductosPage() {
   useEffect(() => { if (localId !== null) getProductos(localId ?? undefined).then(setProductos).catch(console.error) }, [localId])
 
   const guardar = async () => {
-    if (!nombre.trim() || !precio) return
+    if (!nombre.trim() || !venta) return
     try {
       const data = editId
-        ? await actualizarProducto(editId, { nombre: nombre.trim(), precio: Number(precio), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
-        : await crearProducto({ nombre: nombre.trim(), precio: Number(precio), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
+        ? await actualizarProducto(editId, { nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
+        : await crearProducto({ nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
       if (data) setProductos(productos.map(p => p.id === editId ? data[0] : p).concat(editId ? [] : data))
-      setNombre(''); setPrecio(''); setStock(''); setDescuento(''); setDiasValidez('30'); setEditId(null)
+      setNombre(''); setCosto(''); setVenta(''); setStock(''); setDescuento(''); setDiasValidez('30'); setEditId(null)
     } catch (e) { alert('Error al guardar producto') }
   }
 
@@ -77,10 +78,23 @@ export default function ProductosPage() {
                 style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', width: 100 }}>
-              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Precio</label>
-              <input type="number" placeholder="Precio" value={precio} onChange={e => setPrecio(e.target.value)}
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Costo</label>
+              <input type="number" placeholder="Costo" value={costo} onChange={e => setCosto(e.target.value)}
                 style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: 100 }}>
+              <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Venta</label>
+              <input type="number" placeholder="Venta" value={venta} onChange={e => setVenta(e.target.value)}
+                style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+            </div>
+            {venta && (
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 4 }}>
+                <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Ganancia</label>
+                <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: (Number(venta) - Number(costo)) >= 0 ? '#27ae60' : '#e74c3c' }}>
+                  Gs. {(Number(venta) - (Number(costo) || 0)).toLocaleString('es-AR')} ({venta ? Math.round(((Number(venta) - (Number(costo) || 0)) / Number(venta)) * 100) : 0}%)
+                </p>
+              </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', width: 70 }}>
               <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Stock</label>
               <input type="number" placeholder="Stock" value={stock} onChange={e => setStock(e.target.value)}
@@ -100,7 +114,7 @@ export default function ProductosPage() {
               style={{ padding: '10px 16px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
               {editId ? 'Actualizar' : 'Agregar'}
             </button>
-            {editId && <button onClick={() => { setEditId(null); setNombre(''); setPrecio(''); setStock(''); setDescuento(''); setDiasValidez('30') }}
+            {editId && <button onClick={() => { setEditId(null); setNombre(''); setCosto(''); setVenta(''); setStock(''); setDescuento(''); setDiasValidez('30') }}
               style={{ padding: '10px 12px', background: 'transparent', color: '#888', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>X</button>}
           </div>
         </div>
@@ -113,7 +127,8 @@ export default function ProductosPage() {
               <div>
                 <p style={{ fontWeight: 700, fontSize: 15 }}><span style={{ color: '#888', fontWeight: 400 }}>#{p.codigo || '--'} </span>{p.nombre}</p>
                 <p style={{ color: '#888', fontSize: 13 }}>
-                  Gs. {p.precio.toLocaleString('es-AR')} · Stock: <span style={{ color: p.stock > 0 ? '#27ae60' : '#e74c3c', fontWeight: 700 }}>{p.stock}</span>
+                  Costo: Gs. {p.costo.toLocaleString('es-AR')} · Venta: Gs. {p.venta.toLocaleString('es-AR')} · <span style={{ color: (p.venta - p.costo) >= 0 ? '#27ae60' : '#e74c3c', fontWeight: 700 }}>Ganancia: Gs. {(p.venta - p.costo).toLocaleString('es-AR')} ({Math.round(((p.venta - p.costo) / p.venta) * 100)}%)</span>
+                  Stock: <span style={{ color: p.stock > 0 ? '#27ae60' : '#e74c3c', fontWeight: 700 }}>{p.stock}</span>
                   <button onClick={() => setAddStock({ id: p.id!, qty: '' })} style={{ marginLeft: 6, padding: '1px 7px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>+</button>
                   {addStock?.id === p.id && (
                     <span style={{ marginLeft: 6 }}>
@@ -135,7 +150,7 @@ export default function ProductosPage() {
                     {p.descuento_activo !== false ? 'Dto. ON' : 'Dto. OFF'}
                   </button>
                 )}
-                <button onClick={() => { setEditId(p.id ?? null); setNombre(p.nombre); setPrecio(String(p.precio)); setStock(String(p.stock)); setDescuento(String(p.descuento_corte || '')); setDiasValidez(String(p.dias_validez || 30)) }}
+                <button onClick={() => { setEditId(p.id ?? null); setNombre(p.nombre); setCosto(String(p.costo || '')); setVenta(String(p.venta)); setStock(String(p.stock)); setDescuento(String(p.descuento_corte || '')); setDiasValidez(String(p.dias_validez || 30)) }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Editar</button>
                 <button onClick={async () => { if (p.id) { await eliminarProducto(p.id); setProductos(productos.filter(x => x.id !== p.id)) } }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>

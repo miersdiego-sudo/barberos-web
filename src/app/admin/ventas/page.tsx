@@ -102,7 +102,7 @@ export default function VentasPage() {
               <button key={p.id} onClick={() => setProdSel(p)}
                 style={{ padding: '10px 14px', background: prodSel?.id === p.id ? '#C8862B' : '#1A1A1A', color: prodSel?.id === p.id ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13, textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}>
                 <span><strong>{p.nombre}</strong></span>
-                <span>Gs. {p.precio.toLocaleString('es-AR')} · Stock: {p.stock}{p.descuento_corte && p.descuento_activo !== false ? ` · 🎯${p.descuento_corte}% OFF` : ''}</span>
+                <span>Gs. {p.venta.toLocaleString('es-AR')} · Costo: Gs. {p.costo.toLocaleString('es-AR')} · Stock: {p.stock}{p.descuento_corte && p.descuento_activo !== false ? ` · 🎯${p.descuento_corte}% OFF` : ''}</span>
               </button>
             ))}
           </div>
@@ -111,7 +111,7 @@ export default function VentasPage() {
         {cliente && prodSel && (
           <button onClick={registrar}
             style={{ width: '100%', padding: '14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>
-            Registrar venta — Gs. {(prodSel.precio * cantidad).toLocaleString('es-AR')}
+            Registrar venta — Gs. {(prodSel.venta * cantidad).toLocaleString('es-AR')}
           </button>
         )}
 

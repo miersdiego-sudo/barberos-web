@@ -10,6 +10,7 @@ export default function AdminLocalesPage() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [emails, setEmails] = useState<Record<number, string>>({})
+  const [busqueda, setBusqueda] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -35,8 +36,14 @@ export default function AdminLocalesPage() {
 
   if (loading) return <div style={{ padding: 40, color: '#888' }}>Cargando...</div>
 
-  const pendientes = locales.filter(l => l.activo === false)
-  const activas = locales.filter(l => l.activo !== false)
+  const q = busqueda.toLowerCase()
+  const filtrados = locales.filter(l =>
+    l.nombre.toLowerCase().includes(q) ||
+    l.slug.toLowerCase().includes(q) ||
+    (emails[l.id] || '').toLowerCase().includes(q)
+  )
+  const pendientes = filtrados.filter(l => l.activo === false)
+  const activas = filtrados.filter(l => l.activo !== false)
 
   return (
     <div style={{ minHeight: '100vh', background: '#1A1A1A', color: '#F2EFE9', fontFamily: 'sans-serif', padding: '40px 20px' }}>
@@ -45,6 +52,9 @@ export default function AdminLocalesPage() {
           <h1 style={{ fontSize: 24 }}>Administrar Locales</h1>
           <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
         </div>
+
+        <input type="text" placeholder="Buscar por nombre, slug o email..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
+          style={{ display: 'block', width: '100%', padding: 10, marginBottom: 20, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
 
         {pendientes.length > 0 && (
           <>

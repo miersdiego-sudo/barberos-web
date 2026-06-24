@@ -144,18 +144,15 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
   })()
 
   const confirmar = async () => {
-    const nuevo = {
-      barbero,
-      fecha,
+    const nuevo: any = {
+      barbero, fecha,
       inicio: aMinutos(horario),
       fin: aMinutos(horario) + servicio!.duracion,
-      servicio: servicio!.nombre,
-      nombre,
-      cedula,
-      telefono,
+      servicio: servicio!.nombre, nombre, cedula, telefono,
       precio: precioFinal,
       observaciones: observaciones.trim() || null,
     }
+    if (localId) nuevo.local_id = localId
     try {
       await crearTurno(nuevo)
       if (creditoSel?.id) await usarCredito(creditoSel.id)

@@ -67,7 +67,8 @@ export type ProductoDB = {
   id?: number
   local_id?: number
   nombre: string
-  precio: number
+  costo: number
+  venta: number
   stock: number
   codigo?: string | null
   dias_validez?: number | null
