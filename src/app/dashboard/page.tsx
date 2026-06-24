@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getTurnos, actualizarTurno, getBarberos, type BarberoDB } from '@/lib/supabaseClient'
+import { getTurnos, actualizarTurno, getBarberos, getLocales, type BarberoDB } from '@/lib/supabaseClient'
 import { getUserInfo, logout } from '@/lib/auth'
-import { config } from '@/lib/config'
 
 type Turno = {
   id?: number
@@ -50,6 +49,7 @@ export default function DashboardPage() {
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
+  const [nombreLocal, setNombreLocal] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -57,6 +57,10 @@ export default function DashboardPage() {
       if (!info) { router.push('/login'); return }
       setLocalId(info.local_id)
       setEsAdmin(info.is_super_admin)
+      if (info.local_id) getLocales().then(locales => {
+        const l = locales.find(x => x.id === info.local_id)
+        if (l) setNombreLocal(l.nombre)
+      })
     })
   }, [])
 
@@ -136,7 +140,7 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Panel de reservas</h1>
-            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
+            {nombreLocal && <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{nombreLocal}</p>}
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <a href="/admin/barberos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Barberos</a>
