@@ -146,11 +146,11 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <button onClick={() => setMenuAdmin(!menuAdmin)}
-                style={{ background: menuAdmin ? '#C8862B' : '#2B2B2B', color: menuAdmin ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13, padding: '8px 14px', fontWeight: 700 }}>
-                ⚙️ Admin ▾
+                style={{ background: menuAdmin ? '#C8862B' : '#2B2B2B', color: menuAdmin ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 18, padding: '6px 12px', lineHeight: 1 }}>
+                ☰
               </button>
               {menuAdmin && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#2B2B2B', border: '1px solid #3a3a3a', borderRadius: 6, minWidth: 160, zIndex: 10, overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, background: '#2B2B2B', border: '1px solid #3a3a3a', borderRadius: 6, minWidth: 160, zIndex: 10, overflow: 'hidden' }}>
                   <a href="/admin/barberos" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Barberos</a>
                   <a href="/admin/servicios" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Servicios</a>
                   <a href="/admin/productos" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Productos</a>
@@ -161,8 +161,10 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
-            <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Nueva reserva</a>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+              <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>Nueva reserva</a>
+              <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Cerrar sesión</button>
+            </div>
           </div>
         </div>
 
