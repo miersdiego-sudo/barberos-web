@@ -60,8 +60,8 @@ export default function AdminLocalesPage() {
 
   const diasRestantes = (fecha?: string | null) => {
     if (!fecha) return null
-    const diff = Math.floor((new Date(fecha + 'T12:00:00').getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    return diff
+    const diff = Math.floor((Date.now() - new Date(fecha + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24))
+    return 30 - diff
   }
 
   if (loading) return <div style={{ padding: 40, color: '#888' }}>Cargando...</div>
@@ -117,8 +117,8 @@ export default function AdminLocalesPage() {
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
                   <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `✅ ${l.email || 'Dueño asignado'}` : '⏳ Sin dueño'}</p>
-                  {l.fecha_pago && <p style={{ fontSize: 12, color: dias !== null && dias <= 3 ? '#e74c3c' : '#888', marginTop: 2 }}>
-                    Último pago: {l.fecha_pago} {dias !== null && `(${dias >= 0 ? `${dias}d restantes` : `vencido hace ${Math.abs(dias)}d`})`}
+                  {l.fecha_pago && <p style={{ fontSize: 12, color: dias !== null && dias <= 3 ? dias < 0 ? '#e74c3c' : '#D9A441' : '#888', marginTop: 2 }}>
+                    {dias !== null && dias >= 0 ? `⏳ ${dias}d restantes` : dias !== null && dias < 0 ? `❌ Vencido hace ${Math.abs(dias)}d` : ''} · Último pago: {l.fecha_pago}
                   </p>}
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -145,7 +145,7 @@ export default function AdminLocalesPage() {
                       <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
                       <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.email || ''}</p>
                       {l.fecha_pago && <p style={{ fontSize: 12, color: '#e74c3c', marginTop: 2 }}>
-                        Último pago: {l.fecha_pago} (vencido hace {dias !== null ? Math.abs(dias) : '?'}d)
+                        ❌ Vencido hace {dias !== null ? Math.abs(dias) : '?'}d · Último pago: {l.fecha_pago}
                       </p>}
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
