@@ -45,7 +45,6 @@ export default function DashboardPage() {
   const [verInactivos, setVerInactivos] = useState(false)
   const [diasInactivo, setDiasInactivo] = useState(30)
   const [verGrafico, setVerGrafico] = useState(false)
-  const [verEstadisticas, setVerEstadisticas] = useState(false)
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
   const [localId, setLocalId] = useState<number | null>(null)
@@ -205,57 +204,10 @@ export default function DashboardPage() {
             }).sort((a, b) => a.ultima.localeCompare(b.ultima))
             return (
               <>
-              {verEstadisticas && (
-                <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24 }}>
-                  <h3 style={{ fontSize: 16, marginBottom: 12 }}>📊 Estadísticas</h3>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                    <button onClick={() => {
-                      const headers = ['Fecha','Barbero','Servicio','Inicio','Fin','Cliente','Cedula','WhatsApp','Precio','Estado'].join(',')
-                      const rows = filtered.map(t => `${t.fecha},"${t.barbero}","${t.servicio}","${aHora(t.inicio)}","${aHora(t.fin)}","${t.nombre}","${t.cedula}","${t.telefono}",${t.precio},"${t.estado||'pendiente'}"`).join('\n')
-                      const blob = new Blob(['\uFEFF' + headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a'); a.href = url; a.download = `turnos_${mes}.csv`; a.click()
-                      URL.revokeObjectURL(url)
-                    }} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-                      Exportar CSV
-                    </button>
-                    <button onClick={() => {
-                      const headers = ['Fecha','Barbero','Servicio','Inicio','Fin','Cliente','Cedula','WhatsApp','Precio','Estado'].join(',')
-                      const rows = filtered.map(t => `${t.fecha},"${t.barbero}","${t.servicio}","${aHora(t.inicio)}","${aHora(t.fin)}","${t.nombre}","${t.cedula}","${t.telefono}",${t.precio},"${t.estado||'pendiente'}"`).join('\n')
-                      const blob = new Blob(['\uFEFF' + headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a'); a.href = url; a.download = `turnos_${mes}.xls`; a.click()
-                      URL.revokeObjectURL(url)
-                    }} style={{ padding: '8px 14px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-                      Exportar Excel
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-                    <div style={{ padding: '8px 14px', background: '#1A1A1A', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
-                      ✅ Finalizados: <strong style={{ color: '#27ae60' }}>{finalizados}</strong>
-                    </div>
-                    <div style={{ padding: '8px 14px', background: '#1A1A1A', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
-                      ❌ Cancelados: <strong style={{ color: '#e74c3c' }}>{cancelados}</strong>
-                    </div>
-                    <div style={{ padding: '8px 14px', background: '#1A1A1A', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
-                      ⏳ Pendientes: <strong style={{ color: '#D9A441' }}>{pendientes}</strong>
-                    </div>
-                    {topBarbero && <div style={{ padding: '8px 14px', background: '#1A1A1A', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
-                      💇 Barbero top: <strong style={{ color: '#C8862B' }}>{topBarbero[0]}</strong> ({topBarbero[1]})
-                    </div>}
-                    {topServicio && <div style={{ padding: '8px 14px', background: '#1A1A1A', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 12 }}>
-                      ✂️ Servicio top: <strong style={{ color: '#C8862B' }}>{topServicio[0]}</strong> ({topServicio[1]})
-                    </div>}
-                  </div>
-                  <p style={{ color: '#888', fontSize: 12, margin: 0 }}>Filtros activos: {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'}</p>
-                </div>
-              )}
-
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-                <button onClick={() => setVerEstadisticas(!verEstadisticas)}
-                  style={{ padding: '8px 14px', background: verEstadisticas ? '#C8862B' : '#2B2B2B', color: verEstadisticas ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+                <a href="/dashboard/estadisticas" style={{ padding: '8px 14px', background: '#2B2B2B', color: '#F2EFE9', textDecoration: 'none', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
                   📊 Estadísticas
-                </button>
+                </a>
                 <button onClick={() => setVerClientes(!verClientes)}
                   style={{ padding: '8px 14px', background: verClientes ? '#C8862B' : '#2B2B2B', color: verClientes ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
                   🏆 Clientes top
