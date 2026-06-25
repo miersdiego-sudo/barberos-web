@@ -389,9 +389,6 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
                 {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{textoPromo(promoActiva, descuentoProporcional)} ✅</p>}
               {creditoSel && <p style={{ color: '#D9A441', fontSize: 13 }}>🎯 {creditoSel.descuento}% OFF por compra de producto ✅</p>}
             </div>
-            <input type="text" placeholder="Nombre y Apellido" value={nombre} onChange={e => setNombre(e.target.value)} readOnly={clienteExistente}
-              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 4, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: clienteExistente ? '#1e1e1e' : '#2B2B2B', color: '#F2EFE9', cursor: clienteExistente ? 'not-allowed' : 'text' }} />
-            {clienteExistente && <p style={{ color: '#888', fontSize: 11, marginBottom: 12, marginTop: 0 }}>Nombre cargado automáticamente. Solo se puede modificar el teléfono.</p>}
             <input type="text" placeholder="Nro. de Cédula" value={cedula} onChange={async e => {
               const v = e.target.value; setCedula(v); setCreditoSel(null); setClienteExistente(false)
               getCreditos(localId).then(setCreditos).catch(() => {})
@@ -402,10 +399,12 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
                 } catch {}
               }
             }}
-              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
+              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 4, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             <p style={{ color: '#888', fontSize: 12, marginBottom: 12 }}>
-              Tu cédula se usa para promociones, sorteos de vales y cortes de pelo.
+              Si ya reservaste antes, tus datos se cargan automáticamente al ingresar tu cédula.
             </p>
+            <input type="text" placeholder="Nombre y Apellido" value={nombre} onChange={e => setNombre(e.target.value)} readOnly={clienteExistente}
+              style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: clienteExistente ? '#1e1e1e' : '#2B2B2B', color: '#F2EFE9', cursor: clienteExistente ? 'not-allowed' : 'text' }} />
             <input type="tel" placeholder="WhatsApp" value={telefono} onChange={e => setTelefono(e.target.value)}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             <input type="text" placeholder="Observaciones (opcional)" value={observaciones} onChange={e => setObservaciones(e.target.value)}
