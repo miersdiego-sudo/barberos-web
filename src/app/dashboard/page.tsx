@@ -45,6 +45,7 @@ export default function DashboardPage() {
   const [verInactivos, setVerInactivos] = useState(false)
   const [diasInactivo, setDiasInactivo] = useState(30)
   const [verGrafico, setVerGrafico] = useState(false)
+  const [menuAdmin, setMenuAdmin] = useState(false)
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
   const [localId, setLocalId] = useState<number | null>(null)
@@ -142,14 +143,24 @@ export default function DashboardPage() {
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Panel de reservas</h1>
             {nombreLocal && <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{nombreLocal}</p>}
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <a href="/admin/barberos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Barberos</a>
-            <a href="/admin/servicios" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Servicios</a>
-            <a href="/admin/productos" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Productos</a>
-            <a href="/admin/horarios" style={{ color: '#aaa', textDecoration: 'none', fontSize: 14 }}>Horarios</a>
-            <a href="/admin/promociones" style={{ color: '#D9A441', textDecoration: 'none', fontSize: 14 }}>Promociones</a>
-            <a href="/admin/ventas" style={{ color: '#27ae60', textDecoration: 'none', fontSize: 14 }}>Ventas</a>
-            {esAdmin && <a href="/admin/locales" style={{ color: '#e74c3c', textDecoration: 'none', fontSize: 14 }}>Locales</a>}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setMenuAdmin(!menuAdmin)}
+                style={{ background: menuAdmin ? '#C8862B' : '#2B2B2B', color: menuAdmin ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13, padding: '8px 14px', fontWeight: 700 }}>
+                ⚙️ Admin ▾
+              </button>
+              {menuAdmin && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#2B2B2B', border: '1px solid #3a3a3a', borderRadius: 6, minWidth: 160, zIndex: 10, overflow: 'hidden' }}>
+                  <a href="/admin/barberos" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Barberos</a>
+                  <a href="/admin/servicios" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Servicios</a>
+                  <a href="/admin/productos" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Productos</a>
+                  <a href="/admin/horarios" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Horarios</a>
+                  <a href="/admin/promociones" style={{ display: 'block', padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Promociones</a>
+                  <a href="/admin/ventas" style={{ display: 'block', padding: '10px 14px', color: '#27ae60', textDecoration: 'none', fontSize: 13, borderBottom: '1px solid #3a3a3a' }}>Ventas</a>
+                  {esAdmin && <a href="/admin/locales" style={{ display: 'block', padding: '10px 14px', color: '#e74c3c', textDecoration: 'none', fontSize: 13 }}>Locales</a>}
+                </div>
+              )}
+            </div>
             <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Salir</button>
             <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Nueva reserva</a>
           </div>
