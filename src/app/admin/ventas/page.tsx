@@ -12,6 +12,7 @@ export default function VentasPage() {
   const [cliente, setCliente] = useState<{ nombre: string; cedula: string } | null>(null)
   const [prodSel, setProdSel] = useState<ProductoDB | null>(null)
   const [cantidad, setCantidad] = useState(1)
+  const [cantInput, setCantInput] = useState('1')
   const [mensaje, setMensaje] = useState('')
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
@@ -53,7 +54,7 @@ export default function VentasPage() {
         await crearCredito(credito)
       }
       setMensaje(`✅ Venta registrada. ${prodSel.descuento_corte && prodSel.descuento_activo !== false ? `${prodSel.descuento_corte}% OFF asignado a ${cliente.nombre}.` : ''}`)
-      setCliente(null); setProdSel(null); setCantidad(1); setBusqueda('')
+      setCliente(null); setProdSel(null); setCantidad(1); setCantInput('1'); setBusqueda('')
       getProductos(localId ?? undefined).then(setProductos)
     } catch (e) { console.error(e); setMensaje('Error al registrar venta') }
   }
@@ -118,7 +119,12 @@ export default function VentasPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
               <label style={{ fontSize: 13, color: '#888' }}>Cantidad:</label>
-              <input type="number" min={1} max={prodSel.stock} value={cantidad} onChange={e => setCantidad(Math.max(1, Math.min(prodSel.stock, Number(e.target.value) || 1)))}
+              <input type="number" min={1} max={prodSel.stock} value={cantInput} onChange={e => {
+                const raw = e.target.value
+                setCantInput(raw)
+                const num = Number(raw)
+                if (raw !== '' && num >= 1 && num <= prodSel.stock) setCantidad(num)
+              }}
                 style={{ width: 60, padding: 8, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, textAlign: 'center' }} />
               <span style={{ fontSize: 14, color: '#C8862B', fontWeight: 700 }}>= Gs. {(prodSel.venta * cantidad).toLocaleString('es-AR')}</span>
             </div>
