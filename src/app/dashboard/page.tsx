@@ -139,22 +139,33 @@ export default function DashboardPage() {
       <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)' }} />
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700 }}>Panel de reservas</h1>
-            {nombreLocal && <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{nombreLocal}</p>}
-          </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
               <button onClick={() => setMenuAdmin(!menuAdmin)}
                 style={{ background: menuAdmin ? '#C8862B' : '#2B2B2B', color: menuAdmin ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 18, padding: '6px 12px', lineHeight: 1 }}>
                 ☰
               </button>
+              <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Panel de reservas</h1>
             </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
-              <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>Nueva reserva</a>
-              <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Cerrar sesión</button>
-            </div>
+            {nombreLocal && <p style={{ color: '#888', fontSize: 14, marginTop: 4, marginLeft: 44 }}>{nombreLocal}</p>}
+            {menuAdmin && (
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
+                <a href="/admin/barberos" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>💇 Barberos</a>
+                <a href="/admin/servicios" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>✂️ Servicios</a>
+                <a href="/admin/productos" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>🧴 Productos</a>
+                <a href="/admin/horarios" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>🕐 Horarios</a>
+                <a href="/admin/promociones" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>🏷️ Promociones</a>
+                <a href="/admin/ventas" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #27ae60' }}>🛒 Ventas</a>
+                <a href="/dashboard/estadisticas" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>📊 Estadísticas</a>
+                {esAdmin && <a href="/admin/locales" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #e74c3c' }}>🌐 Locales</a>}
+                <button onClick={() => setMenuAdmin(false)} style={{ padding: '10px 14px', background: 'transparent', color: '#888', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, textAlign: 'left' }}>✕ Cerrar</button>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <a href="/turnos" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>Nueva reserva</a>
+            <button onClick={async () => { await logout(); router.push('/login') }} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>Cerrar sesión</button>
           </div>
         </div>
 
@@ -317,19 +328,6 @@ export default function DashboardPage() {
         )}
       </div>
       </div>
-      {menuAdmin && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#1A1A1A', borderTop: '1px solid #3a3a3a', zIndex: 100, padding: '12px 16px', display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/admin/barberos" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>💇 Barberos</a>
-          <a href="/admin/servicios" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>✂️ Servicios</a>
-          <a href="/admin/productos" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>🧴 Productos</a>
-          <a href="/admin/horarios" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>🕐 Horarios</a>
-          <a href="/admin/promociones" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>🏷️ Promociones</a>
-          <a href="/admin/ventas" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #27ae60' }}>🛒 Ventas</a>
-          <a href="/dashboard/estadisticas" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>📊 Estadísticas</a>
-          {esAdmin && <a href="/admin/locales" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #e74c3c' }}>🌐 Locales</a>}
-          <button onClick={() => setMenuAdmin(false)} style={{ padding: '10px 14px', background: 'transparent', color: '#888', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>✕ Cerrar</button>
-        </div>
-      )}
     </div>
   )
 }
