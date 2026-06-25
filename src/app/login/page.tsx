@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [nombreLocal, setNombreLocal] = useState('')
   const [registrando, setRegistrando] = useState(false)
   const [error, setError] = useState('')
+  const [verPass, setVerPass] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,8 +42,13 @@ export default function LoginPage() {
         </h1>
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
           style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
-        <input type="password" placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} required
-          style={{ display: 'block', width: '100%', padding: 10, marginBottom: registrando ? 12 : 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
+        <div style={{ position: 'relative', marginBottom: registrando ? 12 : 16 }}>
+          <input type={verPass ? 'text' : 'password'} placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} required
+            style={{ display: 'block', width: '100%', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, boxSizing: 'border-box' }} />
+          <button type="button" onClick={() => setVerPass(!verPass)} style={{ position: 'absolute', right: 8, top: 8, background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 13, padding: 2 }}>
+            {verPass ? '🙈' : '👁️'}
+          </button>
+        </div>
         {registrando && (
           <input type="text" placeholder="Nombre de tu barbería/peluquería" value={nombreLocal} onChange={e => setNombreLocal(e.target.value)} required
             style={{ display: 'block', width: '100%', padding: 10, marginBottom: 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
