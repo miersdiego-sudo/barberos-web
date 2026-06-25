@@ -62,6 +62,7 @@ export type ServicioDB = {
   nombre: string
   duracion: number
   precio: number
+  activo?: boolean
   componentes?: number[] | null
 }
 

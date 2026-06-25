@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
-import { getHorarios, actualizarHorario, type HorarioDB } from '@/lib/supabaseClient'
+import { getHorarios, actualizarHorario, supabase, type HorarioDB } from '@/lib/supabaseClient'
 
 const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
@@ -11,6 +11,7 @@ export default function HorariosPage() {
   const [horarios, setHorarios] = useState<HorarioDB[]>([])
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
+  const [inicializando, setInicializando] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -21,7 +22,28 @@ export default function HorariosPage() {
     })
   }, [])
 
-  useEffect(() => { if (localId !== null) getHorarios(localId ?? undefined).then(setHorarios).catch(console.error) }, [localId])
+  const cargar = async (lid: number) => {
+    const data = await getHorarios(lid ?? undefined)
+    if (data.length === 0) {
+      setInicializando(true)
+      const defaults = []
+      for (let d = 0; d < 7; d++) {
+        const r = await supabase.from('horarios').insert({
+          dia_semana: d, activo: d === 0 ? false : true,
+          inicio_manana: '08:00', fin_manana: '12:00',
+          inicio_tarde: '15:00', fin_tarde: '20:00',
+          local_id: lid,
+        }).select()
+        if (r.data) defaults.push(r.data[0])
+      }
+      setHorarios(defaults)
+      setInicializando(false)
+    } else {
+      setHorarios(data)
+    }
+  }
+
+  useEffect(() => { if (localId !== null) cargar(localId).catch(console.error) }, [localId])
 
   const toggle = async (h: HorarioDB) => {
     try {
@@ -55,7 +77,7 @@ export default function HorariosPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {horarios.map(h => (
+          {inicializando ? <p style={{ color: '#888', fontSize: 13 }}>Inicializando horarios...</p> : horarios.length === 0 ? <p style={{ color: '#888', fontSize: 13 }}>No hay horarios.</p> : horarios.map(h => (
             <div key={h.id} style={{
               background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, opacity: h.activo ? 1 : 0.4,

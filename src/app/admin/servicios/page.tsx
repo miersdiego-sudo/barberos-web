@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
-import { getServicios, crearServicio, actualizarServicio, eliminarServicio, type ServicioDB } from '@/lib/supabaseClient'
+import { getServicios, crearServicio, actualizarServicio, eliminarServicio, getLocales, type ServicioDB } from '@/lib/supabaseClient'
 
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState<ServicioDB[]>([])
@@ -35,6 +35,17 @@ export default function ServiciosPage() {
       setNombre(''); setDuracion(''); setPrecio(''); setEditId(null)
     } catch (e: any) { alert('Error: ' + (e.message || e)) }
   }
+
+  const toggleActivo = async (s: ServicioDB) => {
+    if (!s.id) return
+    try {
+      await actualizarServicio(s.id, { activo: s.activo === false ? true : false })
+      setServicios(servicios.map(x => x.id === s.id ? { ...x, activo: x.activo === false ? true : false } : x))
+    } catch (e: any) { alert('Error: ' + (e.message || e)) }
+  }
+
+  const activos = servicios.filter(s => s.activo !== false)
+  const inactivos = servicios.filter(s => s.activo === false)
 
   return (
     <div style={{
@@ -71,7 +82,8 @@ export default function ServiciosPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {servicios.map(s => (
+          {activos.length > 0 && <h3 style={{ fontSize: 15, color: '#27ae60', marginBottom: 4 }}>🟢 Activos</h3>}
+          {activos.map(s => (
             <div key={s.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{ fontWeight: 700, fontSize: 15 }}><span style={{ color: '#888', fontWeight: 400 }}>#{s.codigo || '--'} </span>{s.nombre}</p>
@@ -80,12 +92,30 @@ export default function ServiciosPage() {
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => { setEditId(s.id ?? null); setNombre(s.nombre); setDuracion(String(s.duracion)); setPrecio(String(s.precio)) }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Editar</button>
+                <button onClick={() => toggleActivo(s)}
+                  style={{ padding: '6px 10px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Inactivar</button>
                 <button onClick={async () => { if (s.id) { await eliminarServicio(s.id); setServicios(servicios.filter(x => x.id !== s.id)) } }}
-                  style={{ padding: '6px 12px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+                  style={{ padding: '6px 12px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+              </div>
+            </div>
+          ))}
+          {inactivos.length > 0 && <h3 style={{ fontSize: 15, color: '#888', marginBottom: 4, marginTop: 16 }}>🔴 Inactivos</h3>}
+          {inactivos.map(s => (
+            <div key={s.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5 }}>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 15 }}><span style={{ color: '#888', fontWeight: 400 }}>#{s.codigo || '--'} </span>{s.nombre}</p>
+                <p style={{ color: '#888', fontSize: 13 }}>{s.duracion} min · Gs. {s.precio.toLocaleString('es-AR')}</p>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => toggleActivo(s)}
+                  style={{ padding: '6px 10px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Activar</button>
+                <button onClick={async () => { if (s.id) { await eliminarServicio(s.id); setServicios(servicios.filter(x => x.id !== s.id)) } }}
+                  style={{ padding: '6px 12px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
               </div>
             </div>
           ))}
         </div>
+        {servicios.length === 0 && <p style={{ textAlign: 'center', color: '#666', padding: 40 }}>No hay servicios.</p>}
       </div>
     </div>
   )
