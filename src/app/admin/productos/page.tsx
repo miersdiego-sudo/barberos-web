@@ -39,10 +39,10 @@ export default function ProductosPage() {
     try {
       const data = editId
         ? await actualizarProducto(editId, { nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
-        : await crearProducto({ nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
+        : await crearProducto({ nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30, local_id: localId ?? undefined })
       if (data) setProductos(productos.map(p => p.id === editId ? data[0] : p).concat(editId ? [] : data))
       setNombre(''); setCosto(''); setVenta(''); setStock(''); setDescuento(''); setDiasValidez('30'); setEditId(null)
-    } catch (e) { alert('Error al guardar producto') }
+    } catch (e: any) { alert('Error: ' + (e.message || e)) }
   }
 
   const toggleDescuento = async (p: ProductoDB) => {
@@ -128,7 +128,7 @@ export default function ProductosPage() {
                 <p style={{ fontWeight: 700, fontSize: 15 }}><span style={{ color: '#888', fontWeight: 400 }}>#{p.codigo || '--'} </span>{p.nombre}</p>
                 <p style={{ color: '#888', fontSize: 13 }}>
                   Costo: Gs. {p.costo.toLocaleString('es-AR')} · Venta: Gs. {p.venta.toLocaleString('es-AR')} · <span style={{ color: (p.venta - p.costo) >= 0 ? '#27ae60' : '#e74c3c', fontWeight: 700 }}>Ganancia: Gs. {(p.venta - p.costo).toLocaleString('es-AR')} ({Math.round(((p.venta - p.costo) / p.venta) * 100)}%)</span>
-                  Stock: <span style={{ color: p.stock > 0 ? '#27ae60' : '#e74c3c', fontWeight: 700 }}>{p.stock}</span>
+                  Stock: <span style={{ color: p.stock > 0 ? '#27ae60' : '#e74c3c', fontWeight: 700 }}>{p.stock.toLocaleString('es-AR')}</span>
                   <button onClick={() => setAddStock({ id: p.id!, qty: '' })} style={{ marginLeft: 6, padding: '1px 7px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>+</button>
                   {addStock?.id === p.id && (
                     <span style={{ marginLeft: 6 }}>

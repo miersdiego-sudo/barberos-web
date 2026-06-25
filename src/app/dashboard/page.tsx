@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
   const [nombreLocal, setNombreLocal] = useState('')
+  const [slugLocal, setSlugLocal] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function DashboardPage() {
       setEsAdmin(info.is_super_admin)
       if (info.local_id) getLocales().then(locales => {
         const l = locales.find(x => x.id === info.local_id)
-        if (l) setNombreLocal(l.nombre)
+        if (l) { setNombreLocal(l.nombre); setSlugLocal(l.slug) }
       })
     })
   }, [])
@@ -149,6 +150,12 @@ export default function DashboardPage() {
               <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Panel de reservas</h1>
             </div>
             {nombreLocal && <p style={{ color: '#888', fontSize: 14, marginTop: 4, marginLeft: 44 }}>{nombreLocal}</p>}
+            {slugLocal && (
+              <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/turnos/${slugLocal}`); alert('✅ Enlace copiado: ' + `${window.location.origin}/turnos/${slugLocal}`) }}
+                style={{ marginLeft: 44, marginTop: 4, padding: '6px 12px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                🔗 Compartir enlace de reserva
+              </button>
+            )}
             {menuAdmin && (
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
                 <a href="/turnos" style={{ padding: '10px 14px', color: '#C8862B', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #C8862B' }}>📅 Nueva reserva</a>

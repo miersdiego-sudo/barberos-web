@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { login } from '@/lib/auth'
+import { login, resetPassword } from '@/lib/auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,11 +11,13 @@ export default function LoginPage() {
   const [registrando, setRegistrando] = useState(false)
   const [error, setError] = useState('')
   const [verPass, setVerPass] = useState(false)
+  const [mensaje, setMensaje] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setMensaje('')
     try {
       if (registrando) {
         const res = await fetch('/api/registrar', {
@@ -29,6 +31,18 @@ export default function LoginPage() {
         await login(email, pass)
         router.push('/dashboard')
       }
+    } catch (err: any) {
+      setError(err.message || 'Error')
+    }
+  }
+
+  const handleResetPass = async () => {
+    if (!email.trim()) { setError('Primero ingresá tu email'); return }
+    setError('')
+    setMensaje('')
+    try {
+      await resetPassword(email.trim())
+      setMensaje('📧 Revisá tu email para recuperar tu contraseña.')
     } catch (err: any) {
       setError(err.message || 'Error')
     }
@@ -54,9 +68,15 @@ export default function LoginPage() {
             style={{ display: 'block', width: '100%', padding: 10, marginBottom: 16, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
         )}
         {error && <p style={{ color: '#e74c3c', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+        {mensaje && <p style={{ color: '#27ae60', fontSize: 13, marginBottom: 12 }}>{mensaje}</p>}
         <button type="submit" style={{ width: '100%', padding: 12, background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16, marginBottom: 12 }}>
           {registrando ? 'Registrarse' : 'Ingresar'}
         </button>
+        {!registrando && (
+          <button type="button" onClick={handleResetPass} style={{ display: 'block', width: '100%', textAlign: 'center', background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 13, marginBottom: 12, textDecoration: 'underline' }}>
+            ¿Olvidaste tu contraseña?
+          </button>
+        )}
         <p style={{ textAlign: 'center', fontSize: 13, color: '#888' }}>
           <button type="button" onClick={() => setRegistrando(!registrando)} style={{ background: 'none', border: 'none', color: '#C8862B', cursor: 'pointer', fontSize: 13 }}>
             {registrando ? 'Ya tengo cuenta' : 'Crear cuenta'}

@@ -30,10 +30,10 @@ export default function ServiciosPage() {
     try {
       const data = editId
         ? await actualizarServicio(editId, { nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio) })
-        : await crearServicio({ nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio) })
+        : await crearServicio({ nombre: nombre.trim(), duracion: Number(duracion), precio: Number(precio), local_id: localId ?? undefined })
       if (data) setServicios(servicios.map(s => s.id === editId ? data[0] : s).concat(editId ? [] : data))
       setNombre(''); setDuracion(''); setPrecio(''); setEditId(null)
-    } catch (e) { alert('Error al guardar servicio') }
+    } catch (e: any) { alert('Error: ' + (e.message || e)) }
   }
 
   return (
