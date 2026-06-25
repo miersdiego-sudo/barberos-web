@@ -10,6 +10,7 @@ export type LocalDB = {
   nombre: string
   slug: string
   user_id?: string | null
+  email?: string | null
   activo?: boolean
   created_at?: string
 }

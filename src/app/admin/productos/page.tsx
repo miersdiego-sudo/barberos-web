@@ -95,7 +95,7 @@ export default function ProductosPage() {
                 </p>
               </div>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', width: 70 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', width: 90 }}>
               <label style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>Stock</label>
               <input type="number" placeholder="Stock" value={stock} onChange={e => setStock(e.target.value)}
                 style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />

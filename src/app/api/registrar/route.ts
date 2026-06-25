@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     nombre: nombre_local.trim(),
     slug: slug || 'local-' + Date.now(),
     user_id: user.user.id,
+    email: email.trim(),
     activo: false,
   })
   if (errLocal) return NextResponse.json({ error: errLocal.message }, { status: 500 })

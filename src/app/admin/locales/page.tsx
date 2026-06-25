@@ -9,7 +9,6 @@ export default function AdminLocalesPage() {
   const [locales, setLocales] = useState<LocalDB[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
-  const [emails, setEmails] = useState<Record<number, string>>({})
   const [busqueda, setBusqueda] = useState('')
   const router = useRouter()
 
@@ -18,7 +17,6 @@ export default function AdminLocalesPage() {
       if (!info || !info.is_super_admin) { router.push('/login'); return }
       setUserId(info.id)
       getLocales().then(setLocales).catch(console.error)
-      fetch('/api/emails-locales').then(r => r.json()).then(setEmails).catch(() => {})
       setLoading(false)
     })
   }, [])
@@ -40,7 +38,7 @@ export default function AdminLocalesPage() {
   const filtrados = locales.filter(l =>
     l.nombre.toLowerCase().includes(q) ||
     l.slug.toLowerCase().includes(q) ||
-    (emails[l.id] || '').toLowerCase().includes(q)
+    (l.email || '').toLowerCase().includes(q)
   )
   const pendientes = filtrados.filter(l => l.activo === false)
   const activas = filtrados.filter(l => l.activo !== false)
@@ -65,7 +63,7 @@ export default function AdminLocalesPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `Dueño registrado (${emails[l.id] || '...'})` : '⏳ Sin dueño'}</p>
+                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `Dueño: ${l.email || 'sin email'}` : '⏳ Sin dueño'}</p>
                     </div>
                     <button onClick={() => aprobar(l.id)} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Aprobar</button>
                     <button onClick={() => eliminar(l.id)} style={{ padding: '8px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12, marginLeft: 6 }}>Eliminar</button>
@@ -83,7 +81,7 @@ export default function AdminLocalesPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `✅ ${emails[l.id] || 'Dueño asignado'}` : '⏳ Sin dueño'}</p>
+                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `✅ ${l.email || 'Dueño asignado'}` : '⏳ Sin dueño'}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
