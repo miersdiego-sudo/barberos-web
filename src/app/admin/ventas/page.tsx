@@ -48,12 +48,14 @@ export default function VentasPage() {
       if (prodSel.descuento_corte && prodSel.descuento_activo !== false) {
         const venc = new Date()
         venc.setDate(venc.getDate() + (prodSel.dias_validez || 30))
-        await crearCredito({ cedula: cliente.cedula, nombre: cliente.nombre, descuento: prodSel.descuento_corte, vencimiento: venc.toISOString().split('T')[0] })
+        const credito: any = { cedula: cliente.cedula, nombre: cliente.nombre, descuento: prodSel.descuento_corte, vencimiento: venc.toISOString().split('T')[0] }
+        if (localId) credito.local_id = localId
+        await crearCredito(credito)
       }
       setMensaje(`✅ Venta registrada. ${prodSel.descuento_corte && prodSel.descuento_activo !== false ? `${prodSel.descuento_corte}% OFF asignado a ${cliente.nombre}.` : ''}`)
       setCliente(null); setProdSel(null); setCantidad(1); setBusqueda('')
       getProductos(localId ?? undefined).then(setProductos)
-    } catch (e) { setMensaje('Error al registrar venta') }
+    } catch (e) { console.error(e); setMensaje('Error al registrar venta') }
   }
 
   return (
@@ -109,10 +111,22 @@ export default function VentasPage() {
         </div>
 
         {cliente && prodSel && (
-          <button onClick={registrar}
-            style={{ width: '100%', padding: '14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>
-            Registrar venta — Gs. {(prodSel.venta * cantidad).toLocaleString('es-AR')}
-          </button>
+          <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 14 }}><strong>{prodSel.nombre}</strong> — Gs. {prodSel.venta.toLocaleString('es-AR')}/u</span>
+              <span style={{ fontSize: 13, color: '#888' }}>Stock: {prodSel.stock}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: '#888' }}>Cantidad:</label>
+              <input type="number" min={1} max={prodSel.stock} value={cantidad} onChange={e => setCantidad(Math.max(1, Math.min(prodSel.stock, Number(e.target.value) || 1)))}
+                style={{ width: 60, padding: 8, border: '1px solid #3a3a3a', borderRadius: 4, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, textAlign: 'center' }} />
+              <span style={{ fontSize: 14, color: '#C8862B', fontWeight: 700 }}>= Gs. {(prodSel.venta * cantidad).toLocaleString('es-AR')}</span>
+            </div>
+            <button onClick={registrar}
+              style={{ width: '100%', padding: '12px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
+              Registrar venta
+            </button>
+          </div>
         )}
 
         {mensaje && (
