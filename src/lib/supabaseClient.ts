@@ -89,6 +89,19 @@ export type CreditoDB = {
   created_at?: string
 }
 
+export type VentaDB = {
+  id?: number
+  local_id?: number
+  producto_id: number
+  producto_nombre: string
+  cliente_nombre: string
+  cliente_cedula: string
+  cantidad: number
+  precio_unitario: number
+  total: number
+  created_at?: string
+}
+
 export type HorarioDB = {
   id?: number
   local_id?: number
@@ -272,6 +285,20 @@ export async function actualizarHorario(id: number, cambios: Partial<HorarioDB>)
   const { data, error } = await supabase.from('horarios').update(cambios).eq('id', id).select()
   if (error) throw error
   return data as HorarioDB[]
+}
+
+export async function getVentas(local_id?: number) {
+  let q = supabase.from('ventas').select('*').order('created_at', { ascending: false })
+  if (local_id) q = q.eq('local_id', local_id)
+  const { data, error } = await q
+  if (error) throw error
+  return data as VentaDB[]
+}
+
+export async function crearVenta(v: Omit<VentaDB, 'id' | 'created_at'>) {
+  const { data, error } = await supabase.from('ventas').insert(v).select()
+  if (error) throw error
+  return data as VentaDB[]
 }
 
 export const serviciosDisponibles = [

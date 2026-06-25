@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
-import { getProductos, actualizarProducto, crearCredito, getTurnos, type ProductoDB } from '@/lib/supabaseClient'
+import { getProductos, actualizarProducto, crearCredito, getTurnos, getVentas, crearVenta, type ProductoDB, type VentaDB } from '@/lib/supabaseClient'
 
 export default function VentasPage() {
   const [productos, setProductos] = useState<ProductoDB[]>([])
@@ -19,6 +19,8 @@ export default function VentasPage() {
   const [mensaje, setMensaje] = useState('')
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
+  const [ventas, setVentas] = useState<VentaDB[]>([])
+  const [verHistorial, setVerHistorial] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function VentasPage() {
     if (localId !== null) {
       getProductos(localId ?? undefined).then(setProductos).catch(console.error)
       getTurnos(localId ?? undefined).then(setTurnos).catch(console.error)
+      getVentas(localId ?? undefined).then(setVentas).catch(console.error)
     }
   }, [localId])
 
@@ -49,6 +52,12 @@ export default function VentasPage() {
       const nuevoStock = prodSel.stock - cantidad
       if (nuevoStock < 0) { setMensaje('Stock insuficiente'); return }
       await actualizarProducto(prodSel.id!, { stock: nuevoStock })
+      await crearVenta({
+        producto_id: prodSel.id!, producto_nombre: prodSel.nombre,
+        cliente_nombre: cliente.nombre, cliente_cedula: cliente.cedula,
+        cantidad, precio_unitario: prodSel.venta, total: prodSel.venta * cantidad,
+        local_id: localId ?? undefined,
+      })
       if (prodSel.descuento_corte && prodSel.descuento_activo !== false) {
         const venc = new Date()
         venc.setDate(venc.getDate() + (prodSel.dias_validez || 30))
@@ -150,6 +159,24 @@ export default function VentasPage() {
               style={{ width: '100%', padding: '12px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
               Registrar venta
             </button>
+          </div>
+        )}
+
+        <button onClick={() => setVerHistorial(!verHistorial)}
+          style={{ width: '100%', padding: 10, background: verHistorial ? '#C8862B' : 'transparent', color: verHistorial ? '#1A1A1A' : '#888', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13, marginTop: 16, marginBottom: 8 }}>
+          📋 Historial de ventas ({ventas.length})
+        </button>
+
+        {verHistorial && (
+          <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 16, maxHeight: 300, overflowY: 'auto' }}>
+            {ventas.length === 0 ? <p style={{ color: '#888', fontSize: 13 }}>Sin ventas registradas</p> : ventas.map(v => (
+              <div key={v.id} style={{ padding: '8px 0', borderBottom: '1px solid #2a2a2a', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <strong>{v.producto_nombre}</strong> x{v.cantidad} · <span style={{ color: '#888' }}>{v.cliente_nombre}</span>
+                </div>
+                <div style={{ color: '#C8862B', fontWeight: 700 }}>Gs. {(v.total || 0).toLocaleString('es-AR')}</div>
+              </div>
+            ))}
           </div>
         )}
 
