@@ -96,7 +96,8 @@ export default function AdminLocalesPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `Dueño: ${l.email || 'sin email'}` : '⏳ Sin dueño'}</p>
+                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}</p>
+                      {l.email && <p style={{ color: '#aaa', fontSize: 12, marginTop: 1 }}>📧 {l.email}</p>}
                     </div>
                     <button onClick={() => aprobar(l.id)} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Aprobar</button>
                     <button onClick={() => eliminar(l.id)} style={{ padding: '8px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12, marginLeft: 6 }}>Eliminar</button>
@@ -116,7 +117,8 @@ export default function AdminLocalesPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `✅ ${l.email || 'Dueño asignado'}` : '⏳ Sin dueño'}</p>
+                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}</p>
+                  {l.email && <p style={{ color: '#aaa', fontSize: 12, marginTop: 1 }}>📧 {l.email}</p>}
                   {l.fecha_pago && <p style={{ fontSize: 12, color: dias !== null && dias <= 3 ? dias < 0 ? '#e74c3c' : '#D9A441' : '#888', marginTop: 2 }}>
                     {dias !== null && dias >= 0 ? `⏳ ${dias}d restantes` : dias !== null && dias < 0 ? `❌ Vencido hace ${Math.abs(dias)}d` : ''} · Último pago: {l.fecha_pago}
                   </p>}
@@ -143,7 +145,8 @@ export default function AdminLocalesPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.email || ''}</p>
+                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug}</p>
+                      {l.email && <p style={{ color: '#aaa', fontSize: 12, marginTop: 1 }}>📧 {l.email}</p>}
                       {l.fecha_pago && <p style={{ fontSize: 12, color: '#e74c3c', marginTop: 2 }}>
                         ❌ Vencido hace {dias !== null ? Math.abs(dias) : '?'}d · Último pago: {l.fecha_pago}
                       </p>}

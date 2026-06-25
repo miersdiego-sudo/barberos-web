@@ -30,15 +30,15 @@ export default function BarberosPage() {
   const agregar = async () => {
     if (!nombre.trim()) return
     try {
-      const data = await crearBarbero(nombre.trim())
+      const data = await crearBarbero(nombre.trim(), localId ?? undefined)
       if (data.length > 0) {
         const id = data[0].id!
         await actualizarBarbero(id, { cedula: cedula.trim() || null, telefono: telefono.trim() || null })
         getBarberos(localId ?? undefined).then(setBarberos)
       }
       setNombre(''); setCedula(''); setTelefono('')
-    } catch (e) {
-      alert('Error al agregar barbero')
+    } catch (e: any) {
+      alert('Error: ' + (e.message || e))
     }
   }
 
