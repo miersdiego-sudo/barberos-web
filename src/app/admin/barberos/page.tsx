@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getBarberos, crearBarbero, actualizarBarbero, supabase, type BarberoDB } from '@/lib/supabaseClient'
-import { config } from '@/lib/config'
+import { getBarberos, crearBarbero, actualizarBarbero, getLocales, supabase, type BarberoDB } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
 
@@ -13,6 +12,7 @@ export default function BarberosPage() {
   const [telefono, setTelefono] = useState('')
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
+  const [nombreLocal, setNombreLocal] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -20,6 +20,10 @@ export default function BarberosPage() {
       if (!info) { router.push('/login'); return }
       setLocalId(info.local_id)
       setEsAdmin(info.is_super_admin)
+      if (info.local_id) getLocales().then(locales => {
+        const l = locales.find(x => x.id === info.local_id)
+        if (l) setNombreLocal(l.nombre)
+      })
     })
   }, [])
 
@@ -89,7 +93,7 @@ export default function BarberosPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700 }}>Barberos</h1>
-            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{config.nombre}</p>
+            <p style={{ color: '#888', fontSize: 14, marginTop: 4 }}>{nombreLocal}</p>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <a href="/dashboard" style={{ color: '#C8862B', textDecoration: 'none', fontSize: 14 }}>← Panel</a>
