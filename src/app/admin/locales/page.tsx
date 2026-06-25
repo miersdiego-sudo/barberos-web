@@ -16,20 +16,52 @@ export default function AdminLocalesPage() {
     getUserInfo().then(info => {
       if (!info || !info.is_super_admin) { router.push('/login'); return }
       setUserId(info.id)
-      getLocales().then(setLocales).catch(console.error)
+      cargar()
       setLoading(false)
     })
   }, [])
 
-  const aprobar = async (localId: number) => {
-    await supabase.from('locales').update({ activo: true }).eq('id', localId)
+  const cargar = async () => {
+    const todos = await getLocales()
+    const hoy = new Date()
+    for (const l of todos) {
+      if (l.activo && l.fecha_pago) {
+        const pago = new Date(l.fecha_pago + 'T12:00:00')
+        const diff = Math.floor((hoy.getTime() - pago.getTime()) / (1000 * 60 * 60 * 24))
+        if (diff > 30) {
+          await supabase.from('locales').update({ activo: false }).eq('id', l.id)
+        }
+      }
+    }
     getLocales().then(setLocales)
+  }
+
+  const aprobar = async (localId: number) => {
+    await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', localId)
+    cargar()
+  }
+
+  const inactivar = async (localId: number) => {
+    if (!confirm('¿Inactivar este local? Dejará de aparecer en la web.')) return
+    await supabase.from('locales').update({ activo: false }).eq('id', localId)
+    cargar()
+  }
+
+  const registrarPago = async (localId: number) => {
+    await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', localId)
+    cargar()
   }
 
   const eliminar = async (localId: number) => {
     if (!confirm('¿Eliminar este local? Se borrarán todos sus datos.')) return
     await supabase.from('locales').delete().eq('id', localId)
-    getLocales().then(setLocales)
+    cargar()
+  }
+
+  const diasRestantes = (fecha?: string | null) => {
+    if (!fecha) return null
+    const diff = Math.floor((new Date(fecha + 'T12:00:00').getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    return diff
   }
 
   if (loading) return <div style={{ padding: 40, color: '#888' }}>Cargando...</div>
@@ -40,8 +72,9 @@ export default function AdminLocalesPage() {
     l.slug.toLowerCase().includes(q) ||
     (l.email || '').toLowerCase().includes(q)
   )
-  const pendientes = filtrados.filter(l => l.activo === false)
-  const activas = filtrados.filter(l => l.activo !== false)
+  const pendientes = filtrados.filter(l => l.activo === false && !l.fecha_pago)
+  const activas = filtrados.filter(l => l.activo === true)
+  const vencidas = filtrados.filter(l => l.activo === false && l.fecha_pago)
 
   return (
     <div style={{ minHeight: '100vh', background: '#1A1A1A', color: '#F2EFE9', fontFamily: 'sans-serif', padding: '40px 20px' }}>
@@ -76,21 +109,55 @@ export default function AdminLocalesPage() {
 
         <h2 style={{ fontSize: 16, color: '#888', marginBottom: 12 }}>Locales activos ({activas.length})</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {activas.map(l => (
+          {activas.map(l => {
+            const dias = diasRestantes(l.fecha_pago)
+            return (
             <div key={l.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
                   <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? `✅ ${l.email || 'Dueño asignado'}` : '⏳ Sin dueño'}</p>
+                  {l.fecha_pago && <p style={{ fontSize: 12, color: dias !== null && dias <= 3 ? '#e74c3c' : '#888', marginTop: 2 }}>
+                    Último pago: {l.fecha_pago} {dias !== null && `(${dias >= 0 ? `${dias}d restantes` : `vencido hace ${Math.abs(dias)}d`})`}
+                  </p>}
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button onClick={() => registrarPago(l.id)} style={{ padding: '6px 10px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Registrar pago</button>
+                  <button onClick={() => inactivar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Inactivar</button>
                   <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
-                  <button onClick={() => eliminar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+                  <button onClick={() => eliminar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
+
+        {vencidas.length > 0 && (
+          <>
+            <h2 style={{ fontSize: 16, color: '#e74c3c', marginBottom: 12, marginTop: 24 }}>Vencidos sin pago ({vencidas.length})</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {vencidas.map(l => {
+                const dias = diasRestantes(l.fecha_pago)
+                return (
+                <div key={l.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #e74c3c' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
+                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.email || ''}</p>
+                      {l.fecha_pago && <p style={{ fontSize: 12, color: '#e74c3c', marginTop: 2 }}>
+                        Último pago: {l.fecha_pago} (vencido hace {dias !== null ? Math.abs(dias) : '?'}d)
+                      </p>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <button onClick={() => registrarPago(l.id)} style={{ padding: '6px 10px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Registrar pago</button>
+                      <button onClick={() => eliminar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+                    </div>
+                  </div>
+                </div>
+              )})}
+            </div>
+          </>
+        )}
 
         {locales.length === 0 && <p style={{ color: '#666', textAlign: 'center', marginTop: 40 }}>No hay locales registrados</p>}
       </div>
