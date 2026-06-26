@@ -23,6 +23,7 @@ export default function PromocionesPage() {
   useEffect(() => {
     getUserInfo().then(info => {
       if (!info) { router.push('/login'); return }
+      if (info.activo === false) { router.push('/pendiente'); return }
       setLocalId(info.local_id)
       setEsAdmin(info.is_super_admin)
       if (info.local_id) getLocales().then(locales => {

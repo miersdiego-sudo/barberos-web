@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { login, resetPassword } from '@/lib/auth'
+import { login, resetPassword, getUserInfo } from '@/lib/auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -29,7 +29,12 @@ export default function LoginPage() {
         alert('Registrado. El administrador va a revisar y activar tu local.')
       } else {
         await login(email, pass)
-        router.push('/dashboard')
+        const info = await getUserInfo()
+        if (info?.activo === false) {
+          router.push('/pendiente')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Error')

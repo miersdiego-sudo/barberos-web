@@ -52,9 +52,43 @@ export default function AdminLocalesPage() {
     cargar()
   }
 
-  const eliminar = async (localId: number) => {
-    if (!confirm('¿Eliminar este local? Se borrarán todos sus datos.')) return
-    await supabase.from('locales').delete().eq('id', localId)
+  const eliminar = async (local: LocalDB) => {
+    if (!confirm(`¿Eliminar ${local.nombre}? Se borrarán todos sus datos (turnos, barberos, servicios, etc.).`)) return
+    const res = await fetch('/api/delete-user', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ local_id: local.id, user_id: local.user_id, email: local.email }),
+    })
+    if (!res.ok) { const err = await res.json(); alert('Error: ' + err.error); return }
+    alert('Local eliminado. Podés crear uno nuevo con el mismo email.')
+    cargar()
+  }
+
+  const resetPass = async (userId: string | null | undefined, nombre: string) => {
+    if (!userId) return
+    const nueva = prompt(`Nueva contraseña para ${nombre}:`, '')
+    if (!nueva || nueva.length < 6) { alert('Minimo 6 caracteres'); return }
+    if (!confirm(`¿Cambiar contraseña de ${nombre}?`)) return
+    const res = await fetch('/api/reset-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, new_password: nueva }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.error); return }
+    alert('✅ Contraseña actualizada')
+  }
+
+  const cambiarEmail = async (userId: string | null | undefined, nombre: string, emailActual: string | null | undefined) => {
+    if (!userId) return
+    const nuevo = prompt(`Nuevo email para ${nombre} (actual: ${emailActual || ''}):`, emailActual || '')
+    if (!nuevo || nuevo === emailActual) return
+    if (!confirm(`¿Cambiar email de ${nombre} a ${nuevo}?`)) return
+    const res = await fetch('/api/update-email', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, new_email: nuevo }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.error); return }
+    alert('✅ Email actualizado')
     cargar()
   }
 
@@ -99,8 +133,13 @@ export default function AdminLocalesPage() {
                       <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}</p>
                       {l.email && <p style={{ color: '#aaa', fontSize: 12, marginTop: 1 }}>📧 {l.email}</p>}
                     </div>
-                    <button onClick={() => aprobar(l.id)} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Aprobar</button>
-                    <button onClick={() => eliminar(l.id)} style={{ padding: '8px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12, marginLeft: 6 }}>Eliminar</button>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <button onClick={() => aprobar(l.id)} style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Aprobar</button>
+                      {l.user_id && <button onClick={() => resetPass(l.user_id, l.nombre)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>Contraseña</button>}
+                      {l.user_id && <button onClick={() => cambiarEmail(l.user_id, l.nombre, l.email)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11, marginLeft: 4 }}>Email</button>}
+                      <button onClick={() => eliminar(l)} style={{ padding: '8px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12, marginLeft: 6 }}>Eliminar</button>
+                      <span style={{ fontSize: 9, color: '#555', marginLeft: 4 }}>uid:{l.user_id || 'vacio'}</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -123,11 +162,13 @@ export default function AdminLocalesPage() {
                     {dias !== null && dias >= 0 ? `⏳ ${dias}d restantes` : dias !== null && dias < 0 ? `❌ Vencido hace ${Math.abs(dias)}d` : ''} · Último pago: {l.fecha_pago}
                   </p>}
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <button onClick={() => registrarPago(l.id)} style={{ padding: '6px 10px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Registrar pago</button>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    {l.user_id && <button onClick={() => resetPass(l.user_id, l.nombre)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>Contraseña</button>}
+                    {l.user_id && <button onClick={() => cambiarEmail(l.user_id, l.nombre, l.email)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11, marginLeft: 4 }}>Email</button>}
+                    <button onClick={() => registrarPago(l.id)} style={{ padding: '6px 10px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Registrar pago</button>
                   <button onClick={() => inactivar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Inactivar</button>
                   <a href={`/turnos/${l.slug}`} target="_blank" style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12, textDecoration: 'none' }}>Ver</a>
-                  <button onClick={() => eliminar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+                  <button onClick={() => eliminar(l)} style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
                 </div>
               </div>
             </div>
@@ -152,8 +193,10 @@ export default function AdminLocalesPage() {
                       </p>}
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      {l.user_id && <button onClick={() => resetPass(l.user_id, l.nombre)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>Contraseña</button>}
+                      {l.user_id && <button onClick={() => cambiarEmail(l.user_id, l.nombre, l.email)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11, marginLeft: 4 }}>Email</button>}
                       <button onClick={() => registrarPago(l.id)} style={{ padding: '6px 10px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>Registrar pago</button>
-                      <button onClick={() => eliminar(l.id)} style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
+                      <button onClick={() => eliminar(l)} style={{ padding: '6px 10px', background: 'transparent', color: '#888', border: '1px solid #888', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>
                     </div>
                   </div>
                 </div>

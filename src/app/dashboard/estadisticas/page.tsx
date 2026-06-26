@@ -31,6 +31,7 @@ export default function EstadisticasPage() {
   useEffect(() => {
     getUserInfo().then(info => {
       if (!info) { router.push('/login'); return }
+      if (info.activo === false) { router.push('/pendiente'); return }
       setLocalId(info.local_id)
     })
   }, [])

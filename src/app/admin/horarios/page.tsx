@@ -17,6 +17,7 @@ export default function HorariosPage() {
   useEffect(() => {
     getUserInfo().then(info => {
       if (!info) { router.push('/login'); return }
+      if (info.activo === false) { router.push('/pendiente'); return }
       setLocalId(info.local_id)
       setEsAdmin(info.is_super_admin)
     })
@@ -24,19 +25,23 @@ export default function HorariosPage() {
 
   const cargar = async (lid: number) => {
     const data = await getHorarios(lid ?? undefined)
-    if (data.length === 0) {
+    if (data.length < 7) {
       setInicializando(true)
-      const defaults = []
+      const exists = data.map(h => h.dia_semana)
+      const defaults = [...data]
       for (let d = 0; d < 7; d++) {
-        const r = await supabase.from('horarios').insert({
-          dia_semana: d, activo: d === 0 ? false : true,
-          inicio_manana: '08:00', fin_manana: '12:00',
-          inicio_tarde: '15:00', fin_tarde: '20:00',
-          local_id: lid,
-        }).select()
-        if (r.data) defaults.push(r.data[0])
+        if (exists.includes(d)) continue
+        try {
+          const r = await supabase.from('horarios').insert({
+            dia_semana: d, activo: d === 0 ? false : true,
+            inicio_manana: '08:00', fin_manana: '12:00',
+            inicio_tarde: '15:00', fin_tarde: '20:00',
+            local_id: lid,
+          }).select()
+          if (r.data) defaults.push(r.data[0])
+        } catch (e) { console.error(`Error al crear horario dia ${d}:`, e) }
       }
-      setHorarios(defaults)
+      setHorarios(defaults.sort((a, b) => a.dia_semana - b.dia_semana))
       setInicializando(false)
     } else {
       setHorarios(data)
