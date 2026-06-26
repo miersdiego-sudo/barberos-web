@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
-import { getHorarios, actualizarHorario, supabase, type HorarioDB } from '@/lib/supabaseClient'
+import { actualizarHorario, type HorarioDB } from '@/lib/supabaseClient'
 
 const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
@@ -24,31 +24,15 @@ export default function HorariosPage() {
   }, [])
 
   const cargar = async (lid: number) => {
-    const data = await getHorarios(lid ?? undefined)
-    if (data.length < 7) {
-      setInicializando(true)
-      // Limpiar horarios huérfanos (sin local_id) que puedan causar conflicto
-      await supabase.from('horarios').delete().is('local_id', null)
-      const exists = data.map(h => h.dia_semana)
-      const defaults = [...data]
-      let errores = 0
-      for (let d = 0; d < 7; d++) {
-        if (exists.includes(d)) continue
-        const r = await supabase.from('horarios').insert({
-          dia_semana: d, activo: d === 0 ? false : true,
-          inicio_manana: '08:00', fin_manana: '12:00',
-          inicio_tarde: '15:00', fin_tarde: '20:00',
-          local_id: lid,
-        }).select()
-        if (r.error) { errores++; console.error(`Error dia ${d}:`, r.error) }
-        else if (r.data) defaults.push(r.data[0])
-      }
-      if (errores > 0) alert(`No se pudieron crear ${errores} horarios. Revisá la consola para más detalles.`)
-      setHorarios(defaults.sort((a, b) => a.dia_semana - b.dia_semana))
-      setInicializando(false)
-    } else {
-      setHorarios(data)
-    }
+    const res = await fetch('/api/init-horarios', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ local_id: lid }),
+    })
+    if (!res.ok) { const err = await res.json(); alert('Error: ' + err.error); return }
+    const { horarios: data } = await res.json()
+    setInicializando(true)
+    setHorarios(data)
+    setInicializando(false)
   }
 
   useEffect(() => { if (localId !== null) cargar(localId).catch(console.error) }, [localId])
