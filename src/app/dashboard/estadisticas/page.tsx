@@ -56,10 +56,6 @@ export default function EstadisticasPage() {
     return true
   })
 
-  const finalizados = filtered.filter(t => t.estado === 'finalizado').length
-  const cancelados = filtered.filter(t => t.estado === 'cancelado').length
-  const pendientes = filtered.filter(t => !t.estado || t.estado === 'pendiente').length
-
   const barberoCount: Record<string, number> = {}
   const servicioCount: Record<string, number> = {}
   const clientes: Record<string, { nombre: string; cedula: string; telefono: string; total: number; ultima: string }> = {}
@@ -122,15 +118,6 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-          <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
-            ✅ Finalizados: <strong style={{ color: '#27ae60' }}>{finalizados}</strong>
-          </div>
-          <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
-            ❌ Cancelados: <strong style={{ color: '#e74c3c' }}>{cancelados}</strong>
-          </div>
-          <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
-            ⏳ Pendientes: <strong style={{ color: '#D9A441' }}>{pendientes}</strong>
-          </div>
           {topBarbero && <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
             💇 Barbero top: <strong style={{ color: '#C8862B' }}>{topBarbero[0]}</strong> ({topBarbero[1]})
           </div>}
