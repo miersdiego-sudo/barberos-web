@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, crearTurno, actualizarTurno, getCreditos, usarCredito, getClienteByCedula, type ServicioDB, type HorarioDB, type CreditoDB } from '@/lib/supabaseClient'
+import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, actualizarTurno, getCreditos, usarCredito, getClienteByCedula, type ServicioDB, type HorarioDB, type CreditoDB } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
 
 const limpieza = 10
@@ -154,13 +154,17 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
     }
     if (localId) nuevo.local_id = localId
     try {
-      await crearTurno(nuevo)
+      const res = await fetch('/api/crear-turno', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevo),
+      })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
       if (creditoSel?.id) await usarCredito(creditoSel.id)
       setTurnos([...turnos, nuevo])
       setConfirmado(true)
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      alert('Error al guardar el turno. Intentá de nuevo.')
+      alert(e.message || 'Error al guardar el turno. Intentá de nuevo.')
     }
   }
 
