@@ -37,7 +37,8 @@ export default function AdminLocalesPage() {
   }
 
   const aprobar = async (localId: number) => {
-    await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', localId)
+    const { error } = await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', localId)
+    if (error) { alert('Error al aprobar: ' + error.message); return }
     cargar()
   }
 
