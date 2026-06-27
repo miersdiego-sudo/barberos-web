@@ -220,22 +220,32 @@ export default function EstadisticasPage() {
         )}
 
         {verGrafico && (() => {
-          const ahora = new Date()
           const datos: { label: string; total: number }[] = []
 
           if (vistaGrafico === 'mensual') {
-            for (let i = 11; i >= 0; i--) {
-              const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1)
-              const label = d.toLocaleDateString('es', { month: 'short', year: '2-digit' })
-              const delMes = turnos.filter(t => {
-                const [y, m] = t.fecha.split('-').map(Number)
-                if (y !== d.getFullYear() || m !== d.getMonth() + 1) return false
-                if (t.estado !== 'finalizado') return false
-                if (filtroBarbero && t.barbero !== filtroBarbero) return false
-                if (filtroServicio && t.servicio !== filtroServicio) return false
-                return true
-              })
-              datos.push({ label, total: delMes.reduce((s, t) => s + t.precio, 0) })
+            const fechas = turnos.filter(t => {
+              if (t.estado !== 'finalizado') return false
+              if (filtroBarbero && t.barbero !== filtroBarbero) return false
+              if (filtroServicio && t.servicio !== filtroServicio) return false
+              return true
+            }).map(t => t.fecha).filter(Boolean).sort() as string[]
+            if (fechas.length > 0) {
+              const min = new Date(fechas[0] + 'T12:00:00')
+              const max = new Date(fechas[fechas.length - 1] + 'T12:00:00')
+              let d = new Date(min.getFullYear(), min.getMonth(), 1)
+              while (d <= max) {
+                const label = d.toLocaleDateString('es', { month: 'short', year: '2-digit' })
+                const delMes = turnos.filter(t => {
+                  const [y, m] = t.fecha.split('-').map(Number)
+                  if (y !== d.getFullYear() || m !== d.getMonth() + 1) return false
+                  if (t.estado !== 'finalizado') return false
+                  if (filtroBarbero && t.barbero !== filtroBarbero) return false
+                  if (filtroServicio && t.servicio !== filtroServicio) return false
+                  return true
+                })
+                datos.push({ label, total: delMes.reduce((s, t) => s + t.precio, 0) })
+                d.setMonth(d.getMonth() + 1)
+              }
             }
           } else {
             const daysInMonth = new Date(year, month, 0).getDate()
