@@ -1,5 +1,5 @@
 export const config = {
-  nombre: 'Barbería DI LOPEZ',
+  nombre: 'Barberos',
   moneda: 'Gs.',
   monedaLocale: 'es-AR',
 }
