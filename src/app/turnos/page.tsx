@@ -124,7 +124,7 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
     getTurnos(localId).then(setTurnos).catch(console.error)
     getPromos(localId).then(setPromos).catch(console.error)
     getBarberos(localId).then(b => setBarberos(b.filter(x => x.activo !== false).map(x => ({ nombre: x.nombre, foto: x.foto })))).catch(console.error)
-    getServicios(localId).then(setServicios).catch(console.error)
+    getServicios(localId).then(s => setServicios(s.filter(x => x.activo !== false))).catch(console.error)
     getHorarios(localId).then(setHorarios).catch(console.error)
   }, [localId])
 
