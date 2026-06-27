@@ -5,7 +5,7 @@ import { getPromos, crearPromo, eliminarPromo, getServicios, getLocales, type Se
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
 
-type Promo = { id?: number; nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }
+type Promo = { id?: number; nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null; servicios?: string[] | null }
 
 export default function PromocionesPage() {
   const [promos, setPromos] = useState<Promo[]>([])
@@ -14,7 +14,7 @@ export default function PromocionesPage() {
   const [porcentaje, setPorcentaje] = useState('')
   const [inicio, setInicio] = useState('')
   const [fin, setFin] = useState('')
-  const [servicio, setServicio] = useState('')
+  const [serviciosSel, setServiciosSel] = useState<string[]>([])
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
   const [nombreLocal, setNombreLocal] = useState('')
@@ -48,7 +48,8 @@ export default function PromocionesPage() {
         porcentaje: Number(porcentaje),
         inicio,
         fin,
-        servicio: servicio || null,
+        servicio: null,
+        servicios: serviciosSel.length > 0 ? serviciosSel : null,
         local_id: localId!,
       })
       setPromos([...promos, ...data])
@@ -56,7 +57,7 @@ export default function PromocionesPage() {
       setPorcentaje('')
       setInicio('')
       setFin('')
-      setServicio('')
+      setServiciosSel([])
     } catch (e) {
       console.error(e)
       alert('Error al guardar la promoción')
@@ -112,11 +113,20 @@ export default function PromocionesPage() {
                 style={{ width: '100%', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             </div>
           </div>
-            <select value={servicio} onChange={e => setServicio(e.target.value)}
-              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }}>
-              <option value="">Todos los servicios</option>
-              {servicios.map(s => <option key={s.id ?? s.nombre} value={s.nombre}>{s.nombre}</option>)}
-            </select>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 6 }}>Servicios (dejá vacío para aplicar a todos)</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {servicios.map(s => {
+                  const sel = serviciosSel.includes(s.nombre)
+                  return (
+                    <button key={s.id ?? s.nombre} type="button" onClick={() => setServiciosSel(sel ? serviciosSel.filter(x => x !== s.nombre) : [...serviciosSel, s.nombre])}
+                      style={{ padding: '6px 12px', background: sel ? '#C8862B' : '#2B2B2B', color: sel ? '#1A1A1A' : '#F2EFE9', border: `1px solid ${sel ? '#C8862B' : '#3a3a3a'}`, borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
+                      {sel ? '✅ ' : ''}{s.nombre}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           <button onClick={agregar} disabled={!nombre || !porcentaje || !inicio || !fin}
             style={{ padding: '10px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: (!nombre || !porcentaje || !inicio || !fin) ? 0.5 : 1 }}>
             Agregar promoción
@@ -136,7 +146,8 @@ export default function PromocionesPage() {
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{p.nombre}</p>
                   <p style={{ color: '#D9A441', fontSize: 13 }}>{p.porcentaje}% OFF</p>
                   <p style={{ color: '#888', fontSize: 12 }}>{p.inicio} → {p.fin}</p>
-                  {p.servicio && <p style={{ color: '#888', fontSize: 12 }}>Solo: {p.servicio}</p>}
+                  {p.servicios && p.servicios.length > 0 && <p style={{ color: '#888', fontSize: 12 }}>Servicios: {p.servicios.join(', ')}</p>}
+                  {!p.servicios && p.servicio && <p style={{ color: '#888', fontSize: 12 }}>Servicio: {p.servicio}</p>}
                 </div>
                 <button onClick={() => eliminar(p.id)}
                   style={{ padding: '6px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>

@@ -139,7 +139,6 @@ export default function AdminLocalesPage() {
                       {l.user_id && <button onClick={() => resetPass(l.user_id, l.nombre)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>Contraseña</button>}
                       {l.user_id && <button onClick={() => cambiarEmail(l.user_id, l.nombre, l.email)} style={{ padding: '6px 10px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 11, marginLeft: 4 }}>Email</button>}
                       <button onClick={() => eliminar(l)} style={{ padding: '8px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12, marginLeft: 6 }}>Eliminar</button>
-                      <span style={{ fontSize: 9, color: '#555', marginLeft: 4 }}>uid:{l.user_id || 'vacio'}</span>
                     </div>
                   </div>
                 </div>

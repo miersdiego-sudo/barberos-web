@@ -64,6 +64,7 @@ export default function VentasPage() {
         venc.setDate(venc.getDate() + (prodSel.dias_validez || 30))
         const credito: any = { cedula: cliente.cedula, nombre: cliente.nombre, descuento: prodSel.descuento_corte, vencimiento: venc.toISOString().split('T')[0], usado: false }
         if (localId) credito.local_id = localId
+        if (prodSel.descuento_servicios && prodSel.descuento_servicios.length > 0) credito.servicios = prodSel.descuento_servicios
         await crearCredito(credito)
       }
       setMensaje(`✅ Venta registrada. ${prodSel.descuento_corte && prodSel.descuento_activo !== false ? `${prodSel.descuento_corte}% OFF asignado a ${cliente.nombre}.` : ''}`)

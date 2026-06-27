@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getUserInfo, logout } from '@/lib/auth'
-import { getProductos, crearProducto, actualizarProducto, eliminarProducto, type ProductoDB } from '@/lib/supabaseClient'
+import { getProductos, crearProducto, actualizarProducto, eliminarProducto, getServicios, type ProductoDB, type ServicioDB } from '@/lib/supabaseClient'
 
 export default function ProductosPage() {
   const [productos, setProductos] = useState<ProductoDB[]>([])
@@ -18,6 +18,9 @@ export default function ProductosPage() {
   const [busqueda, setBusqueda] = useState('')
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
+  const [mensaje, setMensaje] = useState('')
+  const [servicios, setServicios] = useState<ServicioDB[]>([])
+  const [descuentoServiciosSel, setDescuentoServiciosSel] = useState<string[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -33,16 +36,17 @@ export default function ProductosPage() {
     ? productos.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (p.codigo && p.codigo.includes(busqueda)))
     : productos
 
-  useEffect(() => { if (localId !== null) getProductos(localId ?? undefined).then(setProductos).catch(console.error) }, [localId])
+  useEffect(() => { if (localId !== null) { getProductos(localId ?? undefined).then(setProductos).catch(console.error); getServicios(localId ?? undefined).then(setServicios).catch(console.error) } }, [localId])
 
   const guardar = async () => {
     if (!nombre.trim() || !venta) return
     try {
       const data = editId
-        ? await actualizarProducto(editId, { nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30 })
-        : await crearProducto({ nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30, local_id: localId ?? undefined })
+        ? await actualizarProducto(editId, { nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30, descuento_servicios: descuentoServiciosSel.length > 0 ? descuentoServiciosSel : null })
+        : await crearProducto({ nombre: nombre.trim(), costo: Number(costo) || 0, venta: Number(venta), stock: Number(stock) || 0, descuento_corte: descuento ? Number(descuento) : null, dias_validez: Number(diasValidez) || 30, descuento_servicios: descuentoServiciosSel.length > 0 ? descuentoServiciosSel : null, local_id: localId ?? undefined })
       if (data) setProductos(productos.map(p => p.id === editId ? data[0] : p).concat(editId ? [] : data))
-      setNombre(''); setCosto(''); setVenta(''); setStock(''); setDescuento(''); setDiasValidez('30'); setEditId(null)
+      if (descuento) setMensaje(`✅ ${descuento}% OFF — se aplicará al cliente en su próximo corte.`)
+      setNombre(''); setCosto(''); setVenta(''); setStock(''); setDescuento(''); setDiasValidez('30'); setEditId(null); setDescuentoServiciosSel([])
     } catch (e: any) { alert('Error: ' + (e.message || e)) }
   }
 
@@ -111,6 +115,24 @@ export default function ProductosPage() {
               <input type="number" placeholder="ej: 30" value={diasValidez} onChange={e => setDiasValidez(e.target.value)}
                 style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14 }} />
             </div>
+            {descuento && (
+              <div style={{ width: '100%', marginTop: 4 }}>
+                <label style={{ fontSize: 11, color: '#D9A441', marginBottom: 4, display: 'block' }}>Aplicar descuento a:</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {servicios.map(s => {
+                    const sel = descuentoServiciosSel.includes(s.nombre)
+                    return (
+                      <button key={s.id ?? s.nombre} type="button" onClick={() => setDescuentoServiciosSel(sel ? descuentoServiciosSel.filter(x => x !== s.nombre) : [...descuentoServiciosSel, s.nombre])}
+                        style={{ padding: '4px 10px', background: sel ? '#C8862B' : '#2B2B2B', color: sel ? '#1A1A1A' : '#F2EFE9', border: `1px solid ${sel ? '#C8862B' : '#3a3a3a'}`, borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
+                        {sel ? '✅ ' : ''}{s.nombre}
+                      </button>
+                    )
+                  })}
+                  {servicios.length === 0 && <span style={{ color: '#888', fontSize: 12 }}>Sin servicios disponibles</span>}
+                  {descuentoServiciosSel.length === 0 && <span style={{ color: '#888', fontSize: 11, marginLeft: 4 }}>(todos los servicios)</span>}
+                </div>
+              </div>
+            )}
             <button onClick={guardar}
               style={{ padding: '10px 16px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
               {editId ? 'Actualizar' : 'Agregar'}
@@ -118,6 +140,11 @@ export default function ProductosPage() {
             {editId && <button onClick={() => { setEditId(null); setNombre(''); setCosto(''); setVenta(''); setStock(''); setDescuento(''); setDiasValidez('30') }}
               style={{ padding: '10px 12px', background: 'transparent', color: '#888', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>X</button>}
           </div>
+          {mensaje && (
+            <div style={{ marginTop: 12, padding: 10, background: 'rgba(39,174,96,0.1)', borderRadius: 6, border: '1px solid #27ae60', fontSize: 13, color: '#27ae60' }}>
+              {mensaje}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -141,7 +168,7 @@ export default function ProductosPage() {
                       }} style={{ marginLeft: 4, padding: '2px 8px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 3, cursor: 'pointer', fontSize: 11 }}>OK</button>
                     </span>
                   )}
-                  {p.descuento_corte && p.descuento_activo !== false && <span style={{ color: '#D9A441', marginLeft: 8 }}>🎯 {p.descuento_corte}% OFF · {p.dias_validez || 30} días</span>}
+                  {p.descuento_corte && p.descuento_activo !== false && <span style={{ color: '#D9A441', marginLeft: 8 }}>🎯 {p.descuento_corte}% OFF · {p.dias_validez || 30} días{p.descuento_servicios && p.descuento_servicios.length > 0 ? ` · ${p.descuento_servicios.join(', ')}` : ''}</span>}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -151,7 +178,7 @@ export default function ProductosPage() {
                     {p.descuento_activo !== false ? 'Dto. ON' : 'Dto. OFF'}
                   </button>
                 )}
-                <button onClick={() => { setEditId(p.id ?? null); setNombre(p.nombre); setCosto(String(p.costo || '')); setVenta(String(p.venta)); setStock(String(p.stock)); setDescuento(String(p.descuento_corte || '')); setDiasValidez(String(p.dias_validez || 30)) }}
+                <button onClick={() => { setEditId(p.id ?? null); setNombre(p.nombre); setCosto(String(p.costo || '')); setVenta(String(p.venta)); setStock(String(p.stock)); setDescuento(String(p.descuento_corte || '')); setDiasValidez(String(p.dias_validez || 30)); setDescuentoServiciosSel(p.descuento_servicios || []) }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#aaa', border: '1px solid #3a3a3a', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Editar</button>
                 <button onClick={async () => { if (p.id) { await eliminarProducto(p.id); setProductos(productos.filter(x => x.id !== p.id)) } }}
                   style={{ padding: '6px 12px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Eliminar</button>

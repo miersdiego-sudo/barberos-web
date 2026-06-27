@@ -10,8 +10,16 @@ function formatearPrecio(n: number) {
   return 'Gs. ' + n.toLocaleString('es-AR')
 }
 
-function textoPromo(promo: { porcentaje: number; nombre: string }, parcial: number | null) {
-  return `${promo.porcentaje}% OFF (${promo.nombre})${parcial ? ' · parcial' : ''}`
+function formatearFecha(fechaStr: string) {
+  const [y, m, d] = fechaStr.split('-')
+  return `${parseInt(d)}/${parseInt(m)}/${y}`
+}
+
+function textoPromo(promo: { porcentaje: number; nombre: string; inicio: string; fin: string }, parcial: number | null) {
+  const rango = promo.inicio === promo.fin
+    ? `válido el ${formatearFecha(promo.inicio)}`
+    : `válido del ${formatearFecha(promo.inicio)} al ${formatearFecha(promo.fin)}`
+  return `${promo.porcentaje}% OFF (${promo.nombre}) · ${rango}${parcial ? ' · parcial' : ''}`
 }
 
 type Turno = {
@@ -80,7 +88,7 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
   const [observaciones, setObservaciones] = useState('')
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [confirmado, setConfirmado] = useState(false)
-  const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null }[]>([])
+  const [promos, setPromos] = useState<{ nombre: string; porcentaje: number; inicio: string; fin: string; servicio?: string | null; servicios?: string[] | null }[]>([])
   const [barberos, setBarberos] = useState<{ nombre: string; foto?: string | null }[]>([])
   const [servicios, setServicios] = useState<ServicioDB[]>([])
   const [horarios, setHorarios] = useState<HorarioDB[]>([])
@@ -99,15 +107,23 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
     getHorarios(localId).then(setHorarios).catch(console.error)
   }, [localId])
 
-  const promoActiva = fecha
-    ? promos.find(p => {
-        if (!(fecha >= p.inicio && fecha <= p.fin)) return false
-        if (!p.servicio) return true
-        if (p.servicio === servicio?.nombre) return true
-        if (servicio?.nombre.includes(p.servicio)) return true
-        return false
-      })
-    : null
+  const hoy = new Date()
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+  const fechaRef = fecha || hoyStr
+  const promosActivasHoy = promos.filter(p => hoyStr >= p.inicio && hoyStr <= p.fin)
+
+  const promoActiva = promos.find(p => {
+      if (!(fechaRef >= p.inicio && fechaRef <= p.fin)) return false
+      if (p.servicios && p.servicios.length > 0) {
+        if (!servicio) return false
+        if (!p.servicios.includes(servicio.nombre)) return false
+        return true
+      }
+      if (!p.servicio) return true
+      if (p.servicio === servicio?.nombre) return true
+      if (servicio?.nombre.includes(p.servicio)) return true
+      return false
+    }) ?? null
 
   const descuentoProporcional = (() => {
     if (!promoActiva || !promoActiva.servicio || !servicio || servicios.length === 0) return null
@@ -126,6 +142,7 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
         if (c.usado) return false
         if (c.cedula !== cedula.trim()) return false
         if (c.vencimiento && c.vencimiento < new Date().toISOString().split('T')[0]) return false
+        if (c.servicios && c.servicios.length > 0 && (!servicio || !c.servicios.includes(servicio.nombre))) return false
         return true
       })
     : []
@@ -262,19 +279,13 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
             }}>{p}</div>
           ))}
         </div>
-        {(() => {
-          const hoy = new Date()
-          const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
-          const activas = promos.filter(p => hoyStr >= p.inicio && hoyStr <= p.fin)
-          if (activas.length === 0) return null
-          return (
-            <div style={{ marginBottom: 20, padding: 12, background: 'rgba(217,164,65,0.1)', borderRadius: 8, border: '1px solid #D9A441', fontSize: 13 }}>
-              {activas.map((p, i) => (
-                <p key={i} style={{ color: '#D9A441', marginBottom: i < activas.length - 1 ? 4 : 0 }}>🎯 {p.nombre} — {p.porcentaje}% OFF · válido del {p.inicio} al {p.fin}</p>
-              ))}
-            </div>
-          )
-        })()}
+        {promosActivasHoy.length > 0 && (
+          <div style={{ marginBottom: 20, padding: 12, background: 'rgba(217,164,65,0.1)', borderRadius: 8, border: '1px solid #D9A441', fontSize: 13 }}>
+            {promosActivasHoy.map((p, i) => (
+              <p key={i} style={{ color: '#D9A441', marginBottom: i < promosActivasHoy.length - 1 ? 4 : 0 }}>🎯 {p.nombre} — {p.porcentaje}% OFF · {p.inicio === p.fin ? `válido el ${formatearFecha(p.inicio)}` : `válido del ${formatearFecha(p.inicio)} al ${formatearFecha(p.fin)}`}</p>
+            ))}
+          </div>
+        )}
 
         <h1 style={{ textAlign: 'center', fontSize: 22, marginBottom: 32 }}>Reservá tu turno</h1>
 
@@ -304,6 +315,15 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
                 </button>
               ))}
             </div>
+            {promosActivasHoy.length > 0 && (
+              <div style={{ padding: 10, background: 'rgba(217,164,65,0.1)', borderRadius: 6, border: '1px solid #D9A441', fontSize: 13, marginTop: 8 }}>
+                {promosActivasHoy.map((p, i) => (
+                  <p key={i} style={{ color: '#D9A441', marginBottom: i < promosActivasHoy.length - 1 ? 4 : 0 }}>
+                    🎯 {p.porcentaje}% OFF ({p.nombre}) · {p.inicio === p.fin ? `válido el ${formatearFecha(p.inicio)}` : `válido del ${formatearFecha(p.inicio)} al ${formatearFecha(p.fin)}`}
+                  </p>
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -314,7 +334,7 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
             servicios.map(s => {
               const selected = servicio?.nombre === s.nombre
               return (
-                <button key={s.nombre} onClick={() => { setServicio(s); setPaso(3) }}
+                <button key={s.nombre} onClick={() => { setServicio(s) }}
                   style={selected ? btnSel : btnBase}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{s.nombre}</span>
@@ -325,7 +345,22 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
                 </button>
               )
             }))}
-            <button onClick={() => setPaso(1)} style={{ marginTop: 16, background: 'none', border: 'none', color: '#C8862B', cursor: 'pointer', fontSize: 14 }}>← Volver</button>
+            {servicio && (
+              <>
+                <div style={{ marginTop: 20, padding: 16, background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>
+                  <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Servicio:</strong> {servicio.nombre} ({servicio.duracion} min)</p>
+                  <p style={{ marginBottom: 4 }}><strong style={{ color: '#C8862B' }}>Precio:</strong> {formatearPrecio(precioFinal)}</p>
+                  {promoActiva && <p style={{ color: '#D9A441', fontSize: 13 }}>{textoPromo(promoActiva, descuentoProporcional)} ✅</p>}
+                </div>
+                <button onClick={() => setPaso(3)} style={{
+                  marginTop: 16, padding: '12px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none',
+                  borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 16, width: '100%',
+                }}>
+                  Siguiente →
+                </button>
+              </>
+            )}
+            <button onClick={() => setPaso(1)} style={{ display: 'block', marginTop: 16, background: 'none', border: 'none', color: '#C8862B', cursor: 'pointer', fontSize: 14 }}>← Volver</button>
           </>
         )}
 
@@ -394,11 +429,22 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
               {creditoSel && <p style={{ color: '#D9A441', fontSize: 13 }}>🎯 {creditoSel.descuento}% OFF por compra de producto ✅</p>}
             </div>
             <input type="text" placeholder="Nro. de Cédula" value={cedula} onChange={async e => {
-              const v = e.target.value; setCedula(v); setCreditoSel(null); setClienteExistente(false)
-              getCreditos(localId).then(setCreditos).catch(() => {})
-              if (v.trim().length >= 3) {
+              const raw = e.target.value
+              if (raw && !/^\d*$/.test(raw)) return
+              setCedula(raw); setCreditoSel(null); setClienteExistente(false)
+              getCreditos(localId).then(creditos => {
+                setCreditos(creditos)
+                const disp = creditos.filter(c => {
+                  if (c.usado) return false
+                  if (c.cedula !== raw.trim()) return false
+                  if (c.vencimiento && c.vencimiento < new Date().toISOString().split('T')[0]) return false
+                  return true
+                })
+                if (disp.length > 0) setCreditoSel(disp[0])
+              }).catch(() => {})
+              if (raw.trim().length >= 3) {
                 try {
-                  const c = await getClienteByCedula(v.trim(), localId)
+                  const c = await getClienteByCedula(raw.trim(), localId)
                   if (c) { setNombre(c.nombre); setTelefono(c.telefono); setClienteExistente(true) }
                 } catch {}
               }
@@ -409,7 +455,11 @@ export function TurnosApp({ localId, localNombre }: { localId?: number; localNom
             </p>
             <input type="text" placeholder="Nombre y Apellido" value={nombre} onChange={e => setNombre(e.target.value)} readOnly={clienteExistente}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: clienteExistente ? '#1e1e1e' : '#2B2B2B', color: '#F2EFE9', cursor: clienteExistente ? 'not-allowed' : 'text' }} />
-            <input type="tel" placeholder="WhatsApp" value={telefono} onChange={e => setTelefono(e.target.value)}
+            <input type="tel" placeholder="WhatsApp" value={telefono} onChange={e => {
+              const raw = e.target.value
+              if (raw && !/^\d*$/.test(raw)) return
+              setTelefono(raw)
+            }}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />
             <input type="text" placeholder="Observaciones (opcional)" value={observaciones} onChange={e => setObservaciones(e.target.value)}
               style={{ display: 'block', width: '100%', padding: 10, marginBottom: 12, border: '1px solid #3a3a3a', borderRadius: 6, fontSize: 16, background: '#2B2B2B', color: '#F2EFE9' }} />

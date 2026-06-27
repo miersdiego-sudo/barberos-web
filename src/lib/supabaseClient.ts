@@ -41,6 +41,7 @@ export type PromoDB = {
   inicio: string
   fin: string
   servicio?: string | null
+  servicios?: string[] | null
   created_at?: string
 }
 
@@ -77,6 +78,7 @@ export type ProductoDB = {
   dias_validez?: number | null
   descuento_corte?: number | null
   descuento_activo?: boolean
+  descuento_servicios?: string[] | null
   created_at?: string
 }
 
@@ -88,6 +90,7 @@ export type CreditoDB = {
   descuento: number
   usado: boolean
   vencimiento?: string | null
+  servicios?: string[] | null
   created_at?: string
 }
 
@@ -141,12 +144,6 @@ export async function getClienteByCedula(cedula: string, local_id?: number) {
   const { data, error } = await q.maybeSingle()
   if (error) throw error
   return data as { nombre: string; telefono: string; cedula: string } | null
-}
-
-export async function crearTurno(t: TurnoDB) {
-  const { data, error } = await supabase.from('turnos').insert(t).select()
-  if (error) throw error
-  return data as TurnoDB[]
 }
 
 export async function actualizarTurno(id: number, cambios: Partial<TurnoDB>) {
