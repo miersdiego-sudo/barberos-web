@@ -49,6 +49,7 @@ export default function PromocionesPage() {
         inicio,
         fin,
         servicio: servicio || null,
+        local_id: localId!,
       })
       setPromos([...promos, ...data])
       setNombre('')
