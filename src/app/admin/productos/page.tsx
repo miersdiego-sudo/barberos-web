@@ -117,20 +117,11 @@ export default function ProductosPage() {
             </div>
             {descuento && (
               <div style={{ width: '100%', marginTop: 4 }}>
-                <label style={{ fontSize: 11, color: '#D9A441', marginBottom: 4, display: 'block' }}>Aplicar descuento a:</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {servicios.map(s => {
-                    const sel = descuentoServiciosSel.includes(s.nombre)
-                    return (
-                      <button key={s.id ?? s.nombre} type="button" onClick={() => setDescuentoServiciosSel(sel ? descuentoServiciosSel.filter(x => x !== s.nombre) : [...descuentoServiciosSel, s.nombre])}
-                        style={{ padding: '4px 10px', background: sel ? '#C8862B' : '#2B2B2B', color: sel ? '#1A1A1A' : '#F2EFE9', border: `1px solid ${sel ? '#C8862B' : '#3a3a3a'}`, borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
-                        {sel ? '✅ ' : ''}{s.nombre}
-                      </button>
-                    )
-                  })}
-                  {servicios.length === 0 && <span style={{ color: '#888', fontSize: 12 }}>Sin servicios disponibles</span>}
-                  {descuentoServiciosSel.length === 0 && <span style={{ color: '#888', fontSize: 11, marginLeft: 4 }}>(todos los servicios)</span>}
-                </div>
+                <label style={{ fontSize: 11, color: '#D9A441', marginBottom: 4, display: 'block' }}>Aplicar descuento a (Ctrl+clic para varios, vacío = todos):</label>
+                <select multiple value={descuentoServiciosSel} onChange={e => setDescuentoServiciosSel([...e.target.selectedOptions].map(o => o.value))}
+                  style={{ width: '100%', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, minHeight: 80 }}>
+                  {servicios.map(s => <option key={s.id ?? s.nombre} value={s.nombre}>{s.nombre}</option>)}
+                </select>
               </div>
             )}
             <button onClick={guardar}

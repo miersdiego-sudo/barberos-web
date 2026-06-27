@@ -114,18 +114,11 @@ export default function PromocionesPage() {
             </div>
           </div>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 6 }}>Servicios (dejá vacío para aplicar a todos)</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {servicios.map(s => {
-                  const sel = serviciosSel.includes(s.nombre)
-                  return (
-                    <button key={s.id ?? s.nombre} type="button" onClick={() => setServiciosSel(sel ? serviciosSel.filter(x => x !== s.nombre) : [...serviciosSel, s.nombre])}
-                      style={{ padding: '6px 12px', background: sel ? '#C8862B' : '#2B2B2B', color: sel ? '#1A1A1A' : '#F2EFE9', border: `1px solid ${sel ? '#C8862B' : '#3a3a3a'}`, borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-                      {sel ? '✅ ' : ''}{s.nombre}
-                    </button>
-                  )
-                })}
-              </div>
+              <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 6 }}>Servicios (Ctrl+clic para varios, vacío = todos)</label>
+              <select multiple value={serviciosSel} onChange={e => setServiciosSel([...e.target.selectedOptions].map(o => o.value))}
+                style={{ width: '100%', padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#1A1A1A', color: '#F2EFE9', fontSize: 14, minHeight: 100 }}>
+                {servicios.map(s => <option key={s.id ?? s.nombre} value={s.nombre}>{s.nombre}</option>)}
+              </select>
             </div>
           <button onClick={agregar} disabled={!nombre || !porcentaje || !inicio || !fin}
             style={{ padding: '10px 24px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: (!nombre || !porcentaje || !inicio || !fin) ? 0.5 : 1 }}>
