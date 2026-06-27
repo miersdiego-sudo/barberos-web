@@ -159,7 +159,7 @@ export default function DashboardPage() {
             )}
             {menuAdmin && (
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
-                <a href="/turnos" style={{ padding: '10px 14px', color: '#C8862B', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #C8862B' }}>📅 Nueva reserva</a>
+                <a href={`/turnos/${slugLocal}`} style={{ padding: '10px 14px', color: '#C8862B', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #C8862B' }}>📅 Nueva reserva</a>
                 <div style={{ height: 1, background: '#3a3a3a', margin: '4px 0' }} />
                 <a href="/admin/barberos" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>💇 Barberos</a>
                 <a href="/admin/servicios" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>✂️ Servicios</a>

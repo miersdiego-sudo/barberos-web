@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { getTurnos, getPromos, getBarberos, getServicios, getHorarios, actualizarTurno, getCreditos, usarCredito, getClienteByCedula, type ServicioDB, type HorarioDB, type CreditoDB } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
 
@@ -73,6 +74,26 @@ function generarSlots(fecha: string, servicio: { duracion: number }, turnos: Tur
 }
 
 export default function TurnosPage() {
+  const router = useRouter()
+  const [checking, setChecking] = useState(true)
+  useEffect(() => {
+    import('@/lib/auth').then(({ getUserInfo }) =>
+      getUserInfo().then(info => {
+        if (info?.local_id) {
+          import('@/lib/supabaseClient').then(({ getLocales }) =>
+            getLocales().then(locales => {
+              const l = locales.find(x => x.id === info.local_id)
+              if (l?.slug) router.replace(`/turnos/${l.slug}`)
+              else setChecking(false)
+            })
+          )
+        } else {
+          setChecking(false)
+        }
+      })
+    )
+  }, [])
+  if (checking) return null
   return <TurnosApp />
 }
 
