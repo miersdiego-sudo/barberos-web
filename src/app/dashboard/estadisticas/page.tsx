@@ -298,7 +298,7 @@ export default function EstadisticasPage() {
                 ))}
                 {[0, 0.25, 0.5, 0.75, 1].map(r => {
                   const y = pad.top + gh * (1 - r)
-                  return <text key={r} x={pad.left - 8} y={y + 4} textAnchor="end" fill="#888" fontSize={10}>{formatearPrecio(Math.round(max * r))}</text>
+                  return <text key={r} x={pad.left - 8} y={y + 4} textAnchor="end" fill="#888" fontSize={10}>{Math.round(max * r).toLocaleString('es-AR')}</text>
                 })}
                 {puntosNoZero.map((p, i) => (
                   <circle key={i} cx={p.x} cy={p.y} r={4} fill={esDemo ? '#27ae60' : '#C8862B'} />
@@ -306,7 +306,7 @@ export default function EstadisticasPage() {
                 {linePath && <path d={linePath} stroke={esDemo ? '#27ae60' : '#C8862B'} strokeWidth={2} fill="none" />}
                 {puntosNoZero.map((p, i) => (
                   <text key={i} x={p.x} y={p.y - 10} textAnchor="middle" fill="#F2EFE9" fontSize={10} fontWeight={700}>
-                    {formatearPrecio(p.total)}
+                    {p.total.toLocaleString('es-AR')}
                   </text>
                 ))}
                 {esDemo && datos.map((d, i) => d.turnos != null && d.total > 0 ? (
