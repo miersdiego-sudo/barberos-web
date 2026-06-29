@@ -21,7 +21,7 @@ export default function EstadisticasPage() {
   const [filtroBarbero, setFiltroBarbero] = useState('')
   const [filtroServicio, setFiltroServicio] = useState('')
   const [verGrafico, setVerGrafico] = useState(false)
-  const [vistaGrafico, setVistaGrafico] = useState<'mensual' | 'diario'>('mensual')
+  const [vistaGrafico, setVistaGrafico] = useState<'mensual' | 'diario' | 'demo'>('mensual')
   const [verClientes, setVerClientes] = useState(false)
   const [verInactivos, setVerInactivos] = useState(false)
   const [diasInactivo, setDiasInactivo] = useState(30)
@@ -151,10 +151,12 @@ export default function EstadisticasPage() {
             style={{ padding: '8px 14px', background: verGrafico ? '#C8862B' : '#2B2B2B', color: verGrafico ? '#1A1A1A' : '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
             📈 Tendencia
           </button>
-          {verGrafico && <button onClick={() => setVistaGrafico(v => v === 'mensual' ? 'diario' : 'mensual')}
-            style={{ padding: '8px 14px', background: '#2B2B2B', color: '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-            {vistaGrafico === 'mensual' ? '📅 Ver diario' : '📆 Ver mensual'}
-          </button>}
+          {verGrafico && <>
+            <button onClick={() => setVistaGrafico(v => v === 'mensual' ? 'diario' : v === 'diario' ? 'demo' : 'mensual')}
+              style={{ padding: '8px 14px', background: '#2B2B2B', color: '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+              {vistaGrafico === 'mensual' ? '📅 Ver diario' : vistaGrafico === 'diario' ? '🎲 Demo' : '📆 Ver mensual'}
+            </button>
+          </>}
         </div>
 
         {verClientes && (
@@ -207,9 +209,14 @@ export default function EstadisticasPage() {
         )}
 
         {verGrafico && (() => {
-          const datos: { label: string; total: number }[] = []
+          const datos: { label: string; total: number; turnos?: number }[] = []
 
-          if (vistaGrafico === 'mensual') {
+          if (vistaGrafico === 'demo') {
+            const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+            const vals = [240000, 300000, 270000, 360000, 450000, 660000, 0]
+            const turnosDemo = [8, 10, 9, 12, 15, 22, 0]
+            dias.forEach((d, i) => datos.push({ label: d, total: vals[i], turnos: turnosDemo[i] }))
+          } else if (vistaGrafico === 'mensual') {
             const fechas = turnos.filter(t => {
               if (t.estado !== 'finalizado') return false
               if (filtroBarbero && t.barbero !== filtroBarbero) return false
@@ -260,7 +267,7 @@ export default function EstadisticasPage() {
           const linePath = puntosNoZero.length > 1 ? puntosNoZero.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ') : ''
           return (
             <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24, overflowX: 'auto' }}>
-              <h3 style={{ fontSize: 16, marginBottom: 12 }}>📈 Ventas {vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} ({mes}) — finalizados</h3>
+              <h3 style={{ fontSize: 16, marginBottom: 12 }}>📈 {vistaGrafico === 'demo' ? 'Ejemplo — semana típica (3 barberos)' : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${mes})`} — finalizados</h3>
               <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
                 <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
                 <line x1={pad.left} y1={h - pad.bottom} x2={w - pad.right} y2={h - pad.bottom} stroke="#3a3a3a" />
@@ -283,6 +290,11 @@ export default function EstadisticasPage() {
                     {formatearPrecio(p.total)}
                   </text>
                 ))}
+                {vistaGrafico === 'demo' && datos.map((d, i) => d.turnos != null && d.total > 0 ? (
+                  <text key={'t' + i} x={puntos[i].x} y={puntos[i].y - 24} textAnchor="middle" fill="#D9A441" fontSize={9}>
+                    {d.turnos} turnos
+                  </text>
+                ) : null)}
               </svg>
             </div>
           )
