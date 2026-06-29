@@ -28,8 +28,11 @@ export default function EstadisticasPage() {
   const [esAdmin, setEsAdmin] = useState(false)
   const router = useRouter()
   const hoy = new Date()
-  const [fechaDesde, setFechaDesde] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`)
-  const [fechaHasta, setFechaHasta] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`)
+  const [anioSel, setAnioSel] = useState(hoy.getFullYear())
+  const [mesSel, setMesSel] = useState(String(hoy.getMonth() + 1).padStart(2, '0'))
+  const [diaSel, setDiaSel] = useState('')
+  const fechaDesde = mesSel ? (diaSel ? `${anioSel}-${mesSel}-${diaSel}` : `${anioSel}-${mesSel}-01`) : `${anioSel}-01-01`
+  const fechaHasta = mesSel ? (diaSel ? `${anioSel}-${mesSel}-${diaSel}` : `${anioSel}-${mesSel}-${new Date(anioSel, Number(mesSel), 0).getDate()}`) : `${anioSel}-12-31`
 
   useEffect(() => {
     getUserInfo().then(info => {
@@ -90,19 +93,20 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select value={fechaDesde.slice(0, 4)} onChange={e => { const a = e.target.value; const m = fechaDesde.slice(5, 7); setFechaDesde(`${a}-${m}-01`); setFechaHasta(`${a}-${m}-${new Date(Number(a), Number(m), 0).getDate()}`) }}
+          <select value={anioSel} onChange={e => setAnioSel(Number(e.target.value))}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
             {Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => 2023 + i).map(a => <option key={a} value={a}>{a}</option>)}
           </select>
-          <select value={fechaDesde.slice(5, 7)} onChange={e => { const m = e.target.value; const a = fechaDesde.slice(0, 4); const ult = new Date(Number(a), Number(m), 0).getDate(); setFechaDesde(`${a}-${m}-01`); setFechaHasta(`${a}-${m}-${ult}`) }}
+          <select value={mesSel} onChange={e => setMesSel(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+            <option value="">Todos</option>
             {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => <option key={i} value={String(i + 1).padStart(2, '0')}>{l}</option>)}
           </select>
-          <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
-          <span style={{ color: '#888' }}>→</span>
-          <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
+          <select value={diaSel} onChange={e => setDiaSel(e.target.value)}
+            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+            <option value="">Todos</option>
+            {Array.from({ length: new Date(anioSel, Number(mesSel || 1), 0).getDate() }, (_, i) => i + 1).map(d => <option key={d} value={String(d).padStart(2, '0')}>{d}</option>)}
+          </select>
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
             <option value="">Todos los barberos</option>
