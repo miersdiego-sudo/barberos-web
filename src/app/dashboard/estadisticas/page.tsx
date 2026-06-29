@@ -21,10 +21,12 @@ export default function EstadisticasPage() {
   const [filtroBarbero, setFiltroBarbero] = useState('')
   const [filtroServicio, setFiltroServicio] = useState('')
   const [verGrafico, setVerGrafico] = useState(false)
-  const [vistaGrafico, setVistaGrafico] = useState<'mensual' | 'diario' | 'demo'>('mensual')
+  const [vistaGrafico, setVistaGrafico] = useState<'mensual' | 'diario' | 'demo-diario' | 'demo-mensual'>('mensual')
   const [verClientes, setVerClientes] = useState(false)
   const [verInactivos, setVerInactivos] = useState(false)
   const [diasInactivo, setDiasInactivo] = useState(30)
+  const [esAdmin, setEsAdmin] = useState(false)
+  const [filtroDia, setFiltroDia] = useState('')
   const router = useRouter()
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
@@ -34,6 +36,7 @@ export default function EstadisticasPage() {
       if (!info) { router.push('/login'); return }
       if (info.activo === false) { router.push('/pendiente'); return }
       setLocalId(info.local_id)
+      setEsAdmin(info.is_super_admin)
     })
   }, [])
 
@@ -53,6 +56,11 @@ export default function EstadisticasPage() {
   const filtered = delMes.filter(t => {
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
     if (filtroServicio && t.servicio !== filtroServicio) return false
+    if (filtroDia) {
+      const diaStr = String(Number(filtroDia)).padStart(2, '0')
+      const [y, m, d] = t.fecha.split('-').map(Number)
+      if (String(d) !== String(Number(filtroDia))) return false
+    }
     return true
   })
 
@@ -93,8 +101,15 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="month" value={mes} onChange={e => setMes(e.target.value)}
+          <input type="month" value={mes} onChange={e => { setMes(e.target.value); setFiltroDia('') }}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
+          <select value={filtroDia} onChange={e => setFiltroDia(e.target.value)}
+            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+            <option value="">Todos los días</option>
+            {Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1).map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
             <option value="">Todos los barberos</option>
@@ -152,10 +167,14 @@ export default function EstadisticasPage() {
             📈 Tendencia
           </button>
           {verGrafico && <>
-            <button onClick={() => setVistaGrafico(v => v === 'mensual' ? 'diario' : v === 'diario' ? 'demo' : 'mensual')}
+            <button onClick={() => setVistaGrafico(v => v === 'mensual' ? 'diario' : 'mensual')}
               style={{ padding: '8px 14px', background: '#2B2B2B', color: '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-              {vistaGrafico === 'mensual' ? '📅 Ver diario' : vistaGrafico === 'diario' ? '🎲 Demo' : '📆 Ver mensual'}
+              {vistaGrafico === 'mensual' ? '📅 Ver diario' : '📆 Ver mensual'}
             </button>
+            {esAdmin && <button onClick={() => setVistaGrafico(v => v === 'diario' ? 'demo-diario' : v === 'demo-diario' ? 'demo-mensual' : 'diario')}
+              style={{ padding: '8px 14px', background: '#8e44ad', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+              {vistaGrafico === 'demo-diario' ? '🎲 Demo mensual' : vistaGrafico === 'demo-mensual' ? '📊 Volver' : '🎲 Demo'}
+            </button>}
           </>}
         </div>
 
@@ -210,12 +229,19 @@ export default function EstadisticasPage() {
 
         {verGrafico && (() => {
           const datos: { label: string; total: number; turnos?: number }[] = []
+          const nombreDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+          const esDemo = vistaGrafico === 'demo-diario' || vistaGrafico === 'demo-mensual'
 
-          if (vistaGrafico === 'demo') {
+          if (vistaGrafico === 'demo-diario') {
             const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
             const vals = [240000, 300000, 270000, 360000, 450000, 660000, 0]
             const turnosDemo = [8, 10, 9, 12, 15, 22, 0]
             dias.forEach((d, i) => datos.push({ label: d, total: vals[i], turnos: turnosDemo[i] }))
+          } else if (vistaGrafico === 'demo-mensual') {
+            const labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+            const vals = [320000, 280000, 410000, 380000, 450000, 520000, 600000, 580000, 490000, 510000, 460000, 550000]
+            const turnosDemo = [45, 40, 55, 50, 62, 70, 82, 78, 66, 70, 63, 75]
+            labels.forEach((l, i) => datos.push({ label: l, total: vals[i], turnos: turnosDemo[i] }))
           } else if (vistaGrafico === 'mensual') {
             const fechas = turnos.filter(t => {
               if (t.estado !== 'finalizado') return false
@@ -245,7 +271,9 @@ export default function EstadisticasPage() {
             const daysInMonth = new Date(year, month, 0).getDate()
             for (let d = 1; d <= daysInMonth; d++) {
               const ds = `${mes}-${String(d).padStart(2, '0')}`
-              const label = `${d}`
+              const fechaObj = new Date(ds + 'T12:00:00')
+              const nombre = nombreDias[fechaObj.getDay()]
+              const label = `${nombre} ${d}`
               const delDia = turnos.filter(t => {
                 if (t.fecha !== ds) return false
                 if (t.estado !== 'finalizado') return false
@@ -267,14 +295,16 @@ export default function EstadisticasPage() {
           const linePath = puntosNoZero.length > 1 ? puntosNoZero.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ') : ''
           return (
             <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24, overflowX: 'auto' }}>
-              <h3 style={{ fontSize: 16, marginBottom: 12 }}>📈 {vistaGrafico === 'demo' ? 'Ejemplo — semana típica (3 barberos)' : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${mes})`} — finalizados</h3>
+              <h3 style={{ fontSize: 16, marginBottom: 12 }}>
+                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${mes})`} — finalizados
+              </h3>
               <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
                 <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
                 <line x1={pad.left} y1={h - pad.bottom} x2={w - pad.right} y2={h - pad.bottom} stroke="#3a3a3a" />
                 {puntos.map((p, i) => (
                   <g key={i}>
                     <line x1={p.x} y1={pad.top} x2={p.x} y2={h - pad.bottom} stroke="#2a2a2a" strokeDasharray="3,3" />
-                    <text x={p.x} y={h - pad.bottom + 18} textAnchor="middle" fill="#888" fontSize={vistaGrafico === 'diario' ? 8 : 10}>{datos[i].label}</text>
+                    <text x={p.x} y={h - pad.bottom + 18} textAnchor="middle" fill="#888" fontSize={esDemo ? 9 : vistaGrafico === 'diario' ? 7 : 10}>{datos[i].label}</text>
                   </g>
                 ))}
                 {[0, 0.25, 0.5, 0.75, 1].map(r => {
@@ -282,15 +312,15 @@ export default function EstadisticasPage() {
                   return <text key={r} x={pad.left - 8} y={y + 4} textAnchor="end" fill="#888" fontSize={10}>{formatearPrecio(Math.round(max * r))}</text>
                 })}
                 {puntosNoZero.map((p, i) => (
-                  <circle key={i} cx={p.x} cy={p.y} r={4} fill="#C8862B" />
+                  <circle key={i} cx={p.x} cy={p.y} r={4} fill={esDemo ? '#8e44ad' : '#C8862B'} />
                 ))}
-                {linePath && <path d={linePath} stroke="#C8862B" strokeWidth={2} fill="none" />}
+                {linePath && <path d={linePath} stroke={esDemo ? '#8e44ad' : '#C8862B'} strokeWidth={2} fill="none" />}
                 {puntosNoZero.map((p, i) => (
                   <text key={i} x={p.x} y={p.y - 10} textAnchor="middle" fill="#F2EFE9" fontSize={10} fontWeight={700}>
                     {formatearPrecio(p.total)}
                   </text>
                 ))}
-                {vistaGrafico === 'demo' && datos.map((d, i) => d.turnos != null && d.total > 0 ? (
+                {esDemo && datos.map((d, i) => d.turnos != null && d.total > 0 ? (
                   <text key={'t' + i} x={puntos[i].x} y={puntos[i].y - 24} textAnchor="middle" fill="#D9A441" fontSize={9}>
                     {d.turnos} turnos
                   </text>
@@ -300,7 +330,7 @@ export default function EstadisticasPage() {
           )
         })()}
 
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Filtros activos: {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtered.length} turnos</p>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Filtros activos: {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtroDia ? `Día ${filtroDia}` : 'Todos los días'} · {filtered.length} turnos</p>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
