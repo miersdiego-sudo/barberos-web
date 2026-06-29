@@ -146,12 +146,6 @@ export default function DashboardPage() {
               <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Panel de reservas</h1>
             </div>
             {nombreLocal && <p style={{ color: '#888', fontSize: 14, marginTop: 4, marginLeft: 44 }}>{nombreLocal}</p>}
-            {slugLocal && (
-              <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/turnos/${slugLocal}`); alert('✅ Enlace copiado: ' + `${window.location.origin}/turnos/${slugLocal}`) }}
-                style={{ marginLeft: 44, marginTop: 4, padding: '6px 12px', background: 'transparent', color: '#C8862B', border: '1px solid #C8862B', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
-                🔗 Compartir enlace de reserva
-              </button>
-            )}
             {menuAdmin && (
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
                 <a href={`/turnos/${slugLocal}`} style={{ padding: '10px 14px', color: '#C8862B', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #C8862B' }}>📅 Nueva reserva</a>
@@ -166,6 +160,8 @@ export default function DashboardPage() {
                 <a href="/manual" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>📖 Manual de uso</a>
                 {esAdmin && <a href="/admin/locales" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #e74c3c' }}>🌐 Locales</a>}
                 <div style={{ height: 1, background: '#3a3a3a', margin: '4px 0' }} />
+                {slugLocal && <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/turnos/${slugLocal}`); alert('✅ Enlace copiado: ' + `${window.location.origin}/turnos/${slugLocal}`) }}
+                  style={{ padding: '10px 14px', background: 'transparent', color: '#C8862B', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, textAlign: 'left' }}>🔗 Compartir enlace de reserva</button>}
                 <button onClick={async () => { await logout(); router.push('/login') }} style={{ padding: '10px 14px', background: 'transparent', color: '#e74c3c', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, textAlign: 'left' }}>🚪 Cerrar sesión</button>
               </div>
             )}
