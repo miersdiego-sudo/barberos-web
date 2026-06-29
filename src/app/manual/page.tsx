@@ -285,6 +285,53 @@ export default function ManualPage() {
             </div>
           </section>
 
+          <section>
+            <h2 style={{ fontSize: 18, color: '#C8862B', marginBottom: 8 }}>📈 Ejemplo — tendencia semanal típica</h2>
+            <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>
+              Así se ve una semana normal en una barbería con 3 barberos. Este gráfico es ilustrativo (no usa datos reales).
+              Los sábados son el día pico y los domingos se cierra.
+            </p>
+            <div style={{ background: '#1A1A1A', borderRadius: 6, padding: 20 }}>
+              {(() => {
+                const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+                const turnos = [8, 10, 9, 12, 15, 22, 0]
+                const recaudacion = [240, 300, 270, 360, 450, 660, 0]
+                const max = Math.max(...recaudacion, 1)
+                const w = 420, h = 200, pad = { top: 20, right: 20, bottom: 36, left: 52 }
+                const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom
+                const barW = gw / dias.length * 0.6
+                const gap = gw / dias.length * 0.4
+                return (
+                  <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
+                    <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
+                    <line x1={pad.left} y1={h - pad.bottom} x2={w - pad.right} y2={h - pad.bottom} stroke="#3a3a3a" />
+                    {dias.map((d, i) => {
+                      const x = pad.left + i * (barW + gap) + gap / 2
+                      const barH = (recaudacion[i] / max) * gh
+                      const y = pad.top + gh - barH
+                      return (
+                        <g key={i}>
+                          <line x1={pad.left + (i + 0.5) * (barW + gap)} y1={pad.top} x2={pad.left + (i + 0.5) * (barW + gap)} y2={h - pad.bottom} stroke="#2a2a2a" strokeDasharray="3,3" />
+                          <rect x={x} y={y} width={barW} height={barH || 1} rx={3} fill={recaudacion[i] === 0 ? '#555' : '#C8862B'} />
+                          {recaudacion[i] > 0 && <text x={x + barW / 2} y={y - 6} textAnchor="middle" fill="#F2EFE9" fontSize={10} fontWeight={700}>{recaudacion[i].toLocaleString('es-AR')}</text>}
+                          {recaudacion[i] > 0 && <text x={x + barW / 2} y={y - 18} textAnchor="middle" fill="#D9A441" fontSize={9}>{turnos[i]} turnos</text>}
+                          <text x={x + barW / 2} y={h - pad.bottom + 16} textAnchor="middle" fill="#888" fontSize={11}>{d}</text>
+                        </g>
+                      )
+                    })}
+                    {[0, 0.25, 0.5, 0.75, 1].map(r => {
+                      const y = pad.top + gh * (1 - r)
+                      return <text key={r} x={pad.left - 6} y={y + 4} textAnchor="end" fill="#888" fontSize={9}>{'Gs. ' + Math.round(max * r).toLocaleString('es-AR')}</text>
+                    })}
+                  </svg>
+                )
+              })()}
+              <p style={{ color: '#666', fontSize: 12, textAlign: 'center', marginTop: 12 }}>
+                Ejemplo: recaudación diaria estimada (Gs.) y cantidad de turnos en una semana típica
+              </p>
+            </div>
+          </section>
+
           <p style={{ color: '#666', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
             ¿Alguna duda? Contactá al administrador del sistema.
           </p>
