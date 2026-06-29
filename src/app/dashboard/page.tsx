@@ -45,6 +45,7 @@ export default function DashboardPage() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const hoy = new Date()
   const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
+  const [filtroDia, setFiltroDia] = useState('')
   const [localId, setLocalId] = useState<number | null>(null)
   const [esAdmin, setEsAdmin] = useState(false)
   const [nombreLocal, setNombreLocal] = useState('')
@@ -75,7 +76,9 @@ export default function DashboardPage() {
 
   const turnosDelMes = turnos.filter(t => {
     const [y, m] = t.fecha.split('-').map(Number)
-    return y === year && m === month
+    if (y !== year || m !== month) return false
+    if (filtroDia && t.fecha !== filtroDia) return false
+    return true
   })
 
   const filtered = turnosDelMes.filter(t => {
@@ -178,7 +181,7 @@ export default function DashboardPage() {
         </div>
 
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input type="month" value={mes} onChange={e => setMes(e.target.value)}
+            <input type="date" value={filtroDia || mes + '-01'} onChange={e => { const v = e.target.value; setFiltroDia(v); setMes(v.slice(0, 7)) }}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
             <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
