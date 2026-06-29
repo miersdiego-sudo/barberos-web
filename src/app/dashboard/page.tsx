@@ -170,6 +170,14 @@ export default function DashboardPage() {
         </div>
 
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+            <select value={fechaDesde.slice(0, 4)} onChange={e => { const a = e.target.value; const m = fechaDesde.slice(5, 7); setFechaDesde(`${a}-${m}-01`); setFechaHasta(`${a}-${m}-${new Date(Number(a), Number(m), 0).getDate()}`) }}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+              {Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => 2023 + i).map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <select value={fechaDesde.slice(5, 7)} onChange={e => { const m = e.target.value; const a = fechaDesde.slice(0, 4); const ult = new Date(Number(a), Number(m), 0).getDate(); setFechaDesde(`${a}-${m}-01`); setFechaHasta(`${a}-${m}-${ult}`) }}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+              {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => <option key={i} value={String(i + 1).padStart(2, '0')}>{l}</option>)}
+            </select>
             <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
             <span style={{ color: '#888' }}>→</span>
