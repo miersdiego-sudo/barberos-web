@@ -189,12 +189,12 @@ export default function DashboardPage() {
             </select>
             <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-              <option value="">Todos los barberos</option>
+              <option value="">Barberos</option>
               {barberosFiltro.map(b => <option key={b} value={b}>{b}</option>)}
             </select>
             <select value={filtroServicio} onChange={e => setFiltroServicio(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-              <option value="">Todos los servicios</option>
+              <option value="">Servicios</option>
               {[...new Set(turnos.map(t => t.servicio))].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <div style={{ padding: '10px 16px', background: '#2B2B2B', borderRadius: 6, border: '1px solid #3a3a3a', fontSize: 14 }}>

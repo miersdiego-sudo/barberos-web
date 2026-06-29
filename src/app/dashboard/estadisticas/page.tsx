@@ -109,12 +109,12 @@ export default function EstadisticasPage() {
           </select>
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos los barberos</option>
+            <option value="">Barberos</option>
             {barberos.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <select value={filtroServicio} onChange={e => setFiltroServicio(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos los servicios</option>
+            <option value="">Servicios</option>
             {servicios.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <button onClick={() => {
@@ -328,7 +328,7 @@ export default function EstadisticasPage() {
           )
         })()}
 
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{fechaDesde} → {fechaHasta} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtered.length} turnos</p>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{fechaDesde} → {fechaHasta} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Servicios'} · {filtered.length} turnos</p>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
