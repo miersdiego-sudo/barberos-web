@@ -30,10 +30,6 @@ function formatearPrecio(n: number) {
   return 'Gs. ' + n.toLocaleString('es-AR')
 }
 
-function diasEnMes(year: number, month: number) {
-  return new Date(year, month, 0).getDate()
-}
-
 export default function DashboardPage() {
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [filtroBarbero, setFiltroBarbero] = useState('')
@@ -44,9 +40,9 @@ export default function DashboardPage() {
   const [menuAdmin, setMenuAdmin] = useState(false)
   const [filtroEstado, setFiltroEstado] = useState('')
   const hoy = new Date()
-  const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
-  const [filtroDia, setFiltroDia] = useState('')
   const [localId, setLocalId] = useState<number | null>(null)
+  const [fechaDesde, setFechaDesde] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`)
+  const [fechaHasta, setFechaHasta] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`)
   const [esAdmin, setEsAdmin] = useState(false)
   const [nombreLocal, setNombreLocal] = useState('')
   const [slugLocal, setSlugLocal] = useState('')
@@ -72,16 +68,8 @@ export default function DashboardPage() {
 
   useEffect(() => { if (localId !== null) cargar() }, [localId])
 
-  const [year, month] = mes.split('-').map(Number)
-
-  const turnosDelMes = turnos.filter(t => {
-    const [y, m] = t.fecha.split('-').map(Number)
-    if (y !== year || m !== month) return false
-    if (filtroDia && t.fecha !== filtroDia) return false
-    return true
-  })
-
-  const filtered = turnosDelMes.filter(t => {
+  const filtered = turnos.filter(t => {
+    if (t.fecha < fechaDesde || t.fecha > fechaHasta) return false
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
     if (filtroServicio && t.servicio !== filtroServicio) return false
     if (filtroEstado === 'finalizado' && t.estado !== 'finalizado') return false
@@ -93,13 +81,14 @@ export default function DashboardPage() {
 
   const barberosFiltro = [...new Set(turnos.map(t => t.barbero))]
   const totalRecaudado = filtered.filter(t => t.estado === 'finalizado').reduce((sum, t) => sum + t.precio, 0)
-  const dias = diasEnMes(year, month)
 
   const fotoDeBarbero = (nombre: string) => barberos.find(b => b.nombre === nombre)?.foto
 
   const turnosPorDia: Record<string, Turno[]> = {}
-  for (let d = 1; d <= dias; d++) {
-    const fecha = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  const inicio = new Date(fechaDesde + 'T12:00:00')
+  const fin = new Date(fechaHasta + 'T12:00:00')
+  for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
+    const fecha = d.toISOString().split('T')[0]
     const delDia = filtered.filter(t => t.fecha === fecha)
     if (delDia.length > 0) turnosPorDia[fecha] = delDia
   }
@@ -181,7 +170,10 @@ export default function DashboardPage() {
         </div>
 
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input type="date" value={filtroDia || mes + '-01'} onChange={e => { const v = e.target.value; setFiltroDia(v); setMes(v.slice(0, 7)) }}
+            <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
+            <span style={{ color: '#888' }}>→</span>
+            <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
             <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>

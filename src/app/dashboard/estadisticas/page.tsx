@@ -26,10 +26,10 @@ export default function EstadisticasPage() {
   const [verInactivos, setVerInactivos] = useState(false)
   const [diasInactivo, setDiasInactivo] = useState(30)
   const [esAdmin, setEsAdmin] = useState(false)
-  const [filtroDia, setFiltroDia] = useState('')
   const router = useRouter()
   const hoy = new Date()
-  const [mes, setMes] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`)
+  const [fechaDesde, setFechaDesde] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`)
+  const [fechaHasta, setFechaHasta] = useState(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`)
 
   useEffect(() => {
     getUserInfo().then(info => {
@@ -46,17 +46,10 @@ export default function EstadisticasPage() {
     }
   }, [localId])
 
-  const [year, month] = mes.split('-').map(Number)
-
-  const delMes = turnos.filter(t => {
-    const [y, m] = t.fecha.split('-').map(Number)
-    return y === year && m === month
-  })
-
-  const filtered = delMes.filter(t => {
+  const filtered = turnos.filter(t => {
+    if (t.fecha < fechaDesde || t.fecha > fechaHasta) return false
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
     if (filtroServicio && t.servicio !== filtroServicio) return false
-    if (filtroDia && t.fecha !== filtroDia) return false
     return true
   })
 
@@ -97,7 +90,10 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="date" value={filtroDia || mes + '-01'} onChange={e => { const v = e.target.value; setFiltroDia(v); setMes(v.slice(0, 7)) }}
+          <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
+            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
+          <span style={{ color: '#888' }}>→</span>
+          <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
@@ -114,7 +110,7 @@ export default function EstadisticasPage() {
             const rows = filtered.map((t: any) => `${t.fecha},"${t.barbero}","${t.servicio}","${aHora(t.inicio)}","${aHora(t.fin)}","${t.nombre}","${t.cedula}","${t.telefono}",${t.precio},"${t.estado||'pendiente'}"`).join('\n')
             const blob = new Blob(['\uFEFF' + headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' })
             const url = URL.createObjectURL(blob)
-            const a = document.createElement('a'); a.href = url; a.download = `turnos_${mes}.xls`; a.click()
+            const a = document.createElement('a'); a.href = url; a.download = `turnos_${fechaDesde}_${fechaHasta}.xls`; a.click()
             URL.revokeObjectURL(url)
           }} style={{ padding: '8px 14px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
             Exportar Excel
@@ -257,9 +253,10 @@ export default function EstadisticasPage() {
               }
             }
           } else {
-            const daysInMonth = new Date(year, month, 0).getDate()
-            for (let d = 1; d <= daysInMonth; d++) {
-              const ds = `${mes}-${String(d).padStart(2, '0')}`
+            const inicio = new Date(fechaDesde + 'T12:00:00')
+            const fin = new Date(fechaHasta + 'T12:00:00')
+            for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
+              const ds = d.toISOString().split('T')[0]
               const fechaObj = new Date(ds + 'T12:00:00')
               const nombre = nombreDias[fechaObj.getDay()]
               const label = `${nombre} ${d}`
@@ -285,7 +282,7 @@ export default function EstadisticasPage() {
           return (
             <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24, overflowX: 'auto' }}>
               <h3 style={{ fontSize: 16, marginBottom: 12 }}>
-                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${mes})`} — finalizados
+                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${fechaDesde} → ${fechaHasta})`} — finalizados
               </h3>
               <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
                 <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
@@ -319,7 +316,7 @@ export default function EstadisticasPage() {
           )
         })()}
 
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Filtros activos: {filtroDia || mes} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtered.length} turnos</p>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{fechaDesde} → {fechaHasta} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtered.length} turnos</p>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
