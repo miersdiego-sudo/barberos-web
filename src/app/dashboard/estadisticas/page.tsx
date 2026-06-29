@@ -56,11 +56,7 @@ export default function EstadisticasPage() {
   const filtered = delMes.filter(t => {
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
     if (filtroServicio && t.servicio !== filtroServicio) return false
-    if (filtroDia) {
-      const diaStr = String(Number(filtroDia)).padStart(2, '0')
-      const [y, m, d] = t.fecha.split('-').map(Number)
-      if (String(d) !== String(Number(filtroDia))) return false
-    }
+    if (filtroDia && t.fecha !== filtroDia) return false
     return true
   })
 
@@ -101,15 +97,8 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="month" value={mes} onChange={e => { setMes(e.target.value); setFiltroDia('') }}
+          <input type="date" value={filtroDia || mes + '-01'} onChange={e => { const v = e.target.value; setFiltroDia(v); setMes(v.slice(0, 7)) }}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }} />
-          <select value={filtroDia} onChange={e => setFiltroDia(e.target.value)}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos los días</option>
-            {Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1).map(d => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
             <option value="">Todos los barberos</option>
@@ -172,7 +161,7 @@ export default function EstadisticasPage() {
               {vistaGrafico === 'mensual' ? '📅 Ver diario' : '📆 Ver mensual'}
             </button>
             {esAdmin && <button onClick={() => setVistaGrafico(v => v === 'diario' ? 'demo-diario' : v === 'demo-diario' ? 'demo-mensual' : 'diario')}
-              style={{ padding: '8px 14px', background: '#8e44ad', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+              style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
               {vistaGrafico === 'demo-diario' ? '🎲 Demo mensual' : vistaGrafico === 'demo-mensual' ? '📊 Volver' : '🎲 Demo'}
             </button>}
           </>}
@@ -312,9 +301,9 @@ export default function EstadisticasPage() {
                   return <text key={r} x={pad.left - 8} y={y + 4} textAnchor="end" fill="#888" fontSize={10}>{formatearPrecio(Math.round(max * r))}</text>
                 })}
                 {puntosNoZero.map((p, i) => (
-                  <circle key={i} cx={p.x} cy={p.y} r={4} fill={esDemo ? '#8e44ad' : '#C8862B'} />
+                  <circle key={i} cx={p.x} cy={p.y} r={4} fill={esDemo ? '#27ae60' : '#C8862B'} />
                 ))}
-                {linePath && <path d={linePath} stroke={esDemo ? '#8e44ad' : '#C8862B'} strokeWidth={2} fill="none" />}
+                {linePath && <path d={linePath} stroke={esDemo ? '#27ae60' : '#C8862B'} strokeWidth={2} fill="none" />}
                 {puntosNoZero.map((p, i) => (
                   <text key={i} x={p.x} y={p.y - 10} textAnchor="middle" fill="#F2EFE9" fontSize={10} fontWeight={700}>
                     {formatearPrecio(p.total)}
@@ -330,7 +319,7 @@ export default function EstadisticasPage() {
           )
         })()}
 
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Filtros activos: {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtroDia ? `Día ${filtroDia}` : 'Todos los días'} · {filtered.length} turnos</p>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Filtros activos: {filtroDia || mes} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Todos los servicios'} · {filtered.length} turnos</p>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
