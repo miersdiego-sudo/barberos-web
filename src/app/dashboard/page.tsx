@@ -158,6 +158,7 @@ export default function DashboardPage() {
                 <a href="/admin/ventas" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #27ae60' }}>🛒 Ventas</a>
                 <a href="/dashboard/estadisticas" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>📊 Estadísticas</a>
                 <a href="/manual" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>📖 Manual de uso</a>
+                <a href="/flyer" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #3a3a3a' }}>📰 Flyer</a>
                 {esAdmin && <a href="/admin/locales" style={{ padding: '10px 14px', color: '#F2EFE9', textDecoration: 'none', fontSize: 13, borderRadius: 6, background: '#2B2B2B', border: '1px solid #e74c3c' }}>🌐 Locales</a>}
                 <div style={{ height: 1, background: '#3a3a3a', margin: '4px 0' }} />
                 {slugLocal && <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/turnos/${slugLocal}`); alert('✅ Enlace copiado: ' + `${window.location.origin}/turnos/${slugLocal}`) }}
