@@ -173,13 +173,13 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
             <MultiSelect value={aniosSel.map(String)} onChange={v => setAniosSel(v.map(Number))}
               options={Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => ({ value: String(2023 + i), label: String(2023 + i) }))}
-              placeholder="Años" style={{ width: 100 }} />
+              placeholder="Años" style={{ width: 90 }} />
             <MultiSelect value={mesesSel} onChange={setMesesSel}
               options={['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => ({ value: String(i + 1).padStart(2, '0'), label: l }))}
-              placeholder="Meses" style={{ width: 100 }} />
+              placeholder="Meses" style={{ width: 90 }} />
             <MultiSelect value={diasSel} onChange={setDiasSel}
               options={Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) }))}
-              placeholder="Días" style={{ width: 100 }} />
+              placeholder="Días" style={{ width: 90 }} />
             <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
               <option value="">Barberos</option>
