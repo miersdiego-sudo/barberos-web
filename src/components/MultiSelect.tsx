@@ -28,7 +28,7 @@ export default function MultiSelect({ value, onChange, options, placeholder, sty
 
   const todosSeleccionados = value.length === options.length
 
-  const texto = !value.length ? (placeholder || 'Seleccionar') : value.length === 1 ? (options.find(o => o.value === value[0])?.label || value[0]) : 'Selección múltiple'
+  const texto = !value.length ? (placeholder || 'Seleccionar') : value.length === 1 ? (options.find(o => o.value === value[0])?.label || value[0]) : 'Selec mult'
 
   return (
     <div ref={ref} style={{ position: 'relative', ...style }}>
