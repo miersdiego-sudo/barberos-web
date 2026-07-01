@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getTurnos, getBarberos } from '@/lib/supabaseClient'
 import { getUserInfo } from '@/lib/auth'
+import MultiSelect from '@/components/MultiSelect'
 
 function aHora(minutos: number) {
   const h = Math.floor(minutos / 60)
@@ -95,18 +96,15 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select multiple value={aniosSel.map(String)} onChange={e => setAniosSel(Array.from(e.target.selectedOptions, o => Number(o.value)))}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
-            {Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => 2023 + i).map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <select multiple value={mesesSel} onChange={e => setMesesSel(Array.from(e.target.selectedOptions, o => o.value))}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
-            {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => <option key={i} value={String(i + 1).padStart(2, '0')}>{l}</option>)}
-          </select>
-          <select multiple value={diasSel} onChange={e => setDiasSel(Array.from(e.target.selectedOptions, o => o.value))}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
-            {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={String(d).padStart(2, '0')}>{d}</option>)}
-          </select>
+          <MultiSelect value={aniosSel.map(String)} onChange={v => setAniosSel(v.map(Number))}
+            options={Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => ({ value: String(2023 + i), label: String(2023 + i) }))}
+            placeholder="Años" style={{ minWidth: 90 }} />
+          <MultiSelect value={mesesSel} onChange={setMesesSel}
+            options={['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => ({ value: String(i + 1).padStart(2, '0'), label: l }))}
+            placeholder="Meses" style={{ minWidth: 100 }} />
+          <MultiSelect value={diasSel} onChange={setDiasSel}
+            options={Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) }))}
+            placeholder="Días" style={{ minWidth: 90 }} />
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
             <option value="">Barberos</option>

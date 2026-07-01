@@ -1,0 +1,51 @@
+'use client'
+import { useState, useRef, useEffect } from 'react'
+
+interface Props {
+  value: string[]
+  onChange: (val: string[]) => void
+  options: { value: string; label: string }[]
+  placeholder?: string
+  style?: React.CSSProperties
+}
+
+export default function MultiSelect({ value, onChange, options, placeholder, style }: Props) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const toggle = (v: string) => {
+    if (value.includes(v)) onChange(value.filter(x => x !== v))
+    else onChange([...value, v])
+  }
+
+  const texto = value.length ? value.map(v => options.find(o => o.value === v)?.label || v).join(', ') : (placeholder || 'Seleccionar')
+
+  return (
+    <div ref={ref} style={{ position: 'relative', ...style }}>
+      <div onClick={() => setOpen(!open)}
+        style={{ padding: '8px 12px', border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: value.length ? '#F2EFE9' : '#888', fontSize: 14, cursor: 'pointer', userSelect: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{texto}</span>
+        <span style={{ fontSize: 10, color: '#888', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#2B2B2B', border: '1px solid #3a3a3a', borderRadius: 6, marginTop: 4, maxHeight: 200, overflowY: 'auto', zIndex: 1000 }}>
+          {options.map(o => (
+            <label key={o.value} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', cursor: 'pointer', color: '#F2EFE9', fontSize: 14, borderBottom: '1px solid #3a3a3a' }}>
+              <input type="checkbox" checked={value.includes(o.value)} onChange={() => toggle(o.value)}
+                style={{ accentColor: '#C8862B' }} />
+              {o.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
