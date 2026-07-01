@@ -35,7 +35,7 @@ export default function MultiSelect({ value, onChange, options, placeholder, sty
       <div style={{ display: 'flex', gap: 2 }}>
         <div onClick={() => setOpen(!open)}
           style={{ flex: 1, padding: '8px 12px', border: '1px solid #3a3a3a', borderRadius: '6px 0 0 6px', background: '#2B2B2B', color: value.length ? '#F2EFE9' : '#888', fontSize: 14, cursor: 'pointer', userSelect: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{texto}</span>
+          <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{texto}</span>
           <span style={{ fontSize: 10, color: '#888', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
         </div>
         {value.length > 0 && (
