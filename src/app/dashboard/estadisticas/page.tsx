@@ -28,11 +28,10 @@ export default function EstadisticasPage() {
   const [esAdmin, setEsAdmin] = useState(false)
   const router = useRouter()
   const hoy = new Date()
-  const [anioSel, setAnioSel] = useState(hoy.getFullYear())
-  const [mesSel, setMesSel] = useState(String(hoy.getMonth() + 1).padStart(2, '0'))
-  const [diaSel, setDiaSel] = useState('')
-  const fechaDesde = mesSel ? (diaSel ? `${anioSel}-${mesSel}-${diaSel}` : `${anioSel}-${mesSel}-01`) : `${anioSel}-01-01`
-  const fechaHasta = mesSel ? (diaSel ? `${anioSel}-${mesSel}-${diaSel}` : `${anioSel}-${mesSel}-${new Date(anioSel, Number(mesSel), 0).getDate()}`) : `${anioSel}-12-31`
+  const [aniosSel, setAniosSel] = useState<number[]>([hoy.getFullYear()])
+  const [mesesSel, setMesesSel] = useState<string[]>([String(hoy.getMonth() + 1).padStart(2, '0')])
+  const [diasSel, setDiasSel] = useState<string[]>([])
+  const filtroTexto = [aniosSel.join(', '), mesesSel.length ? mesesSel.map(m => ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][Number(m)-1]).join(', ') : 'Todos', diasSel.length ? diasSel.map(d => Number(d)).join(', ') : 'Todos'].join(' · ')
 
   useEffect(() => {
     getUserInfo().then(info => {
@@ -50,7 +49,10 @@ export default function EstadisticasPage() {
   }, [localId])
 
   const filtered = turnos.filter(t => {
-    if (t.fecha < fechaDesde || t.fecha > fechaHasta) return false
+    const [a, m, d] = t.fecha.split('-')
+    if (aniosSel.length && !aniosSel.includes(Number(a))) return false
+    if (mesesSel.length && !mesesSel.includes(m)) return false
+    if (diasSel.length && !diasSel.includes(d)) return false
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
     if (filtroServicio && t.servicio !== filtroServicio) return false
     return true
@@ -93,19 +95,17 @@ export default function EstadisticasPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select value={anioSel} onChange={e => setAnioSel(Number(e.target.value))}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+          <select multiple value={aniosSel.map(String)} onChange={e => setAniosSel(Array.from(e.target.selectedOptions, o => Number(o.value)))}
+            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
             {Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => 2023 + i).map(a => <option key={a} value={a}>{a}</option>)}
           </select>
-          <select value={mesSel} onChange={e => setMesSel(e.target.value)}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos</option>
+          <select multiple value={mesesSel} onChange={e => setMesesSel(Array.from(e.target.selectedOptions, o => o.value))}
+            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
             {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => <option key={i} value={String(i + 1).padStart(2, '0')}>{l}</option>)}
           </select>
-          <select value={diaSel} onChange={e => setDiaSel(e.target.value)}
-            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-            <option value="">Todos</option>
-            {Array.from({ length: new Date(anioSel, Number(mesSel || 1), 0).getDate() }, (_, i) => i + 1).map(d => <option key={d} value={String(d).padStart(2, '0')}>{d}</option>)}
+          <select multiple value={diasSel} onChange={e => setDiasSel(Array.from(e.target.selectedOptions, o => o.value))}
+            style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={String(d).padStart(2, '0')}>{d}</option>)}
           </select>
           <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
             style={{ padding: 8, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
@@ -122,7 +122,7 @@ export default function EstadisticasPage() {
             const rows = filtered.map((t: any) => `${t.fecha},"${t.barbero}","${t.servicio}","${aHora(t.inicio)}","${aHora(t.fin)}","${t.nombre}","${t.cedula}","${t.telefono}",${t.precio},"${t.estado||'pendiente'}"`).join('\n')
             const blob = new Blob(['\uFEFF' + headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' })
             const url = URL.createObjectURL(blob)
-            const a = document.createElement('a'); a.href = url; a.download = `turnos_${fechaDesde}_${fechaHasta}.xls`; a.click()
+            const a = document.createElement('a'); a.href = url; a.download = `turnos_${aniosSel.join('-')}_${mesesSel.join('-') || 'todos'}_${diasSel.join('-') || 'todos'}.xls`; a.click()
             URL.revokeObjectURL(url)
           }} style={{ padding: '8px 14px', background: '#C8862B', color: '#1A1A1A', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
             Exportar Excel
@@ -265,8 +265,13 @@ export default function EstadisticasPage() {
               }
             }
           } else {
-            const inicio = new Date(fechaDesde + 'T12:00:00')
-            const fin = new Date(fechaHasta + 'T12:00:00')
+            const minA = Math.min(...aniosSel), maxA = Math.max(...aniosSel)
+            const minM = mesesSel.length ? Math.min(...mesesSel.map(Number)) : 1
+            const maxM = mesesSel.length ? Math.max(...mesesSel.map(Number)) : 12
+            const minD = diasSel.length ? Math.min(...diasSel.map(Number)) : 1
+            const maxD = diasSel.length ? Math.max(...diasSel.map(Number)) : new Date(maxA, maxM, 0).getDate()
+            const inicio = new Date(`${minA}-${String(minM).padStart(2, '0')}-${String(minD).padStart(2, '0')}T12:00:00`)
+            const fin = new Date(`${maxA}-${String(maxM).padStart(2, '0')}-${String(maxD).padStart(2, '0')}T12:00:00`)
             for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
               const ds = d.toISOString().split('T')[0]
               const fechaObj = new Date(ds + 'T12:00:00')
@@ -294,7 +299,7 @@ export default function EstadisticasPage() {
           return (
             <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24, overflowX: 'auto' }}>
               <h3 style={{ fontSize: 16, marginBottom: 12 }}>
-                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${fechaDesde} → ${fechaHasta})`} — finalizados
+                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${filtroTexto})`} — finalizados
               </h3>
               <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
                 <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
@@ -328,7 +333,7 @@ export default function EstadisticasPage() {
           )
         })()}
 
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{fechaDesde} → {fechaHasta} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Servicios'} · {filtered.length} turnos</p>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{filtroTexto} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Servicios'} · {filtered.length} turnos</p>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>

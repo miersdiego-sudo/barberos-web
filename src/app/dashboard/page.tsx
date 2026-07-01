@@ -41,11 +41,9 @@ export default function DashboardPage() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const hoy = new Date()
   const [localId, setLocalId] = useState<number | null>(null)
-  const [anioSel, setAnioSel] = useState(hoy.getFullYear())
-  const [mesSel, setMesSel] = useState(String(hoy.getMonth() + 1).padStart(2, '0'))
-  const [diaSel, setDiaSel] = useState('')
-  const fechaDesde = mesSel ? (diaSel ? `${anioSel}-${mesSel}-${diaSel}` : `${anioSel}-${mesSel}-01`) : `${anioSel}-01-01`
-  const fechaHasta = mesSel ? (diaSel ? `${anioSel}-${mesSel}-${diaSel}` : `${anioSel}-${mesSel}-${new Date(anioSel, Number(mesSel), 0).getDate()}`) : `${anioSel}-12-31`
+  const [aniosSel, setAniosSel] = useState<number[]>([hoy.getFullYear()])
+  const [mesesSel, setMesesSel] = useState<string[]>([String(hoy.getMonth() + 1).padStart(2, '0')])
+  const [diasSel, setDiasSel] = useState<string[]>([])
   const [esAdmin, setEsAdmin] = useState(false)
   const [nombreLocal, setNombreLocal] = useState('')
   const [slugLocal, setSlugLocal] = useState('')
@@ -72,7 +70,10 @@ export default function DashboardPage() {
   useEffect(() => { if (localId !== null) cargar() }, [localId])
 
   const filtered = turnos.filter(t => {
-    if (t.fecha < fechaDesde || t.fecha > fechaHasta) return false
+    const [a, m, d] = t.fecha.split('-')
+    if (aniosSel.length && !aniosSel.includes(Number(a))) return false
+    if (mesesSel.length && !mesesSel.includes(m)) return false
+    if (diasSel.length && !diasSel.includes(d)) return false
     if (filtroBarbero && t.barbero !== filtroBarbero) return false
     if (filtroServicio && t.servicio !== filtroServicio) return false
     if (filtroEstado === 'finalizado' && t.estado !== 'finalizado') return false
@@ -88,12 +89,9 @@ export default function DashboardPage() {
   const fotoDeBarbero = (nombre: string) => barberos.find(b => b.nombre === nombre)?.foto
 
   const turnosPorDia: Record<string, Turno[]> = {}
-  const inicio = new Date(fechaDesde + 'T12:00:00')
-  const fin = new Date(fechaHasta + 'T12:00:00')
-  for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
-    const fecha = d.toISOString().split('T')[0]
-    const delDia = filtered.filter(t => t.fecha === fecha)
-    if (delDia.length > 0) turnosPorDia[fecha] = delDia
+  for (const t of filtered) {
+    if (!turnosPorDia[t.fecha]) turnosPorDia[t.fecha] = []
+    turnosPorDia[t.fecha].push(t)
   }
 
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
@@ -169,19 +167,17 @@ export default function DashboardPage() {
         </div>
 
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-            <select value={anioSel} onChange={e => setAnioSel(Number(e.target.value))}
-              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
+            <select multiple value={aniosSel.map(String)} onChange={e => setAniosSel(Array.from(e.target.selectedOptions, o => Number(o.value)))}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
               {Array.from({ length: hoy.getFullYear() - 2023 + 1 }, (_, i) => 2023 + i).map(a => <option key={a} value={a}>{a}</option>)}
             </select>
-            <select value={mesSel} onChange={e => setMesSel(e.target.value)}
-              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-              <option value="">Todos</option>
+            <select multiple value={mesesSel} onChange={e => setMesesSel(Array.from(e.target.selectedOptions, o => o.value))}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
               {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'].map((l, i) => <option key={i} value={String(i + 1).padStart(2, '0')}>{l}</option>)}
             </select>
-            <select value={diaSel} onChange={e => setDiaSel(e.target.value)}
-              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
-              <option value="">Todos</option>
-              {Array.from({ length: new Date(anioSel, Number(mesSel || 1), 0).getDate() }, (_, i) => i + 1).map(d => <option key={d} value={String(d).padStart(2, '0')}>{d}</option>)}
+            <select multiple value={diasSel} onChange={e => setDiasSel(Array.from(e.target.selectedOptions, o => o.value))}
+              style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14, minHeight: 38 }}>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={String(d).padStart(2, '0')}>{d}</option>)}
             </select>
             <select value={filtroBarbero} onChange={e => setFiltroBarbero(e.target.value)}
               style={{ padding: 10, border: '1px solid #3a3a3a', borderRadius: 6, background: '#2B2B2B', color: '#F2EFE9', fontSize: 14 }}>
