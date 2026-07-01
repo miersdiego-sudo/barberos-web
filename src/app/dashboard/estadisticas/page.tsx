@@ -29,9 +29,12 @@ export default function EstadisticasPage() {
   const [esAdmin, setEsAdmin] = useState(false)
   const router = useRouter()
   const hoy = new Date()
-  const [aniosSel, setAniosSel] = useState<number[]>([hoy.getFullYear()])
-  const [mesesSel, setMesesSel] = useState<string[]>([String(hoy.getMonth() + 1).padStart(2, '0')])
-  const [diasSel, setDiasSel] = useState<string[]>([])
+  const [aniosSel, setAniosSel] = useState<number[]>(() => { try { const v = localStorage.getItem('filtroAnios'); return v ? JSON.parse(v) : [hoy.getFullYear()] } catch { return [hoy.getFullYear()] } })
+  const [mesesSel, setMesesSel] = useState<string[]>(() => { try { const v = localStorage.getItem('filtroMeses'); return v ? JSON.parse(v) : [String(hoy.getMonth() + 1).padStart(2, '0')] } catch { return [String(hoy.getMonth() + 1).padStart(2, '0')] } })
+  const [diasSel, setDiasSel] = useState<string[]>(() => { try { const v = localStorage.getItem('filtroDias'); return v ? JSON.parse(v) : [] } catch { return [] } })
+  useEffect(() => { localStorage.setItem('filtroAnios', JSON.stringify(aniosSel)) }, [aniosSel])
+  useEffect(() => { localStorage.setItem('filtroMeses', JSON.stringify(mesesSel)) }, [mesesSel])
+  useEffect(() => { localStorage.setItem('filtroDias', JSON.stringify(diasSel)) }, [diasSel])
   const filtroTexto = [aniosSel.join(', '), mesesSel.length ? mesesSel.map(m => ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][Number(m)-1]).join(', ') : 'Todos', diasSel.length ? diasSel.map(d => Number(d)).join(', ') : 'Todos'].join(' · ')
 
   useEffect(() => {
