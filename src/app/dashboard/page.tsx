@@ -42,12 +42,20 @@ export default function DashboardPage() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const hoy = new Date()
   const [localId, setLocalId] = useState<number | null>(null)
-  const [aniosSel, setAniosSel] = useState<number[]>(() => { try { const v = localStorage.getItem('filtroAnios'); return v ? JSON.parse(v) : [hoy.getFullYear()] } catch { return [hoy.getFullYear()] } })
-  const [mesesSel, setMesesSel] = useState<string[]>(() => { try { const v = localStorage.getItem('filtroMeses'); return v ? JSON.parse(v) : [String(hoy.getMonth() + 1).padStart(2, '0')] } catch { return [String(hoy.getMonth() + 1).padStart(2, '0')] } })
-  const [diasSel, setDiasSel] = useState<string[]>(() => { try { const v = localStorage.getItem('filtroDias'); return v ? JSON.parse(v) : [] } catch { return [] } })
-  useEffect(() => { localStorage.setItem('filtroAnios', JSON.stringify(aniosSel)) }, [aniosSel])
-  useEffect(() => { localStorage.setItem('filtroMeses', JSON.stringify(mesesSel)) }, [mesesSel])
-  useEffect(() => { localStorage.setItem('filtroDias', JSON.stringify(diasSel)) }, [diasSel])
+  const [aniosSel, setAniosSel] = useState<number[]>([hoy.getFullYear()])
+  const [mesesSel, setMesesSel] = useState<string[]>([String(hoy.getMonth() + 1).padStart(2, '0')])
+  const [diasSel, setDiasSel] = useState<string[]>([])
+  useEffect(() => {
+    if (!localId) return
+    try {
+      const a = localStorage.getItem(`filtroAnios_${localId}`); if (a) setAniosSel(JSON.parse(a))
+      const m = localStorage.getItem(`filtroMeses_${localId}`); if (m) setMesesSel(JSON.parse(m))
+      const d = localStorage.getItem(`filtroDias_${localId}`); if (d) setDiasSel(JSON.parse(d))
+    } catch {}
+  }, [localId])
+  useEffect(() => { if (localId) localStorage.setItem(`filtroAnios_${localId}`, JSON.stringify(aniosSel)) }, [aniosSel, localId])
+  useEffect(() => { if (localId) localStorage.setItem(`filtroMeses_${localId}`, JSON.stringify(mesesSel)) }, [mesesSel, localId])
+  useEffect(() => { if (localId) localStorage.setItem(`filtroDias_${localId}`, JSON.stringify(diasSel)) }, [diasSel, localId])
   const [esAdmin, setEsAdmin] = useState(false)
   const [nombreLocal, setNombreLocal] = useState('')
   const [slugLocal, setSlugLocal] = useState('')
