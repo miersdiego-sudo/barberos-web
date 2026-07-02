@@ -334,8 +334,6 @@ export default function EstadisticasPage() {
           )
         })()}
 
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{filtroTexto} · {filtroBarbero || 'Todos los barberos'} · {filtroServicio || 'Servicios'} · {filtered.length} turnos</p>
-
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
