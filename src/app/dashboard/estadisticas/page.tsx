@@ -43,8 +43,6 @@ export default function EstadisticasPage() {
   useEffect(() => { if (localId) localStorage.setItem(`filtroAnios_${localId}`, JSON.stringify(aniosSel)) }, [aniosSel, localId])
   useEffect(() => { if (localId) localStorage.setItem(`filtroMeses_${localId}`, JSON.stringify(mesesSel)) }, [mesesSel, localId])
   useEffect(() => { if (localId) localStorage.setItem(`filtroDias_${localId}`, JSON.stringify(diasSel)) }, [diasSel, localId])
-  const filtroTexto = [aniosSel.join(', '), mesesSel.length ? mesesSel.map(m => ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][Number(m)-1]).join(', ') : 'Todos', diasSel.length ? diasSel.map(d => Number(d)).join(', ') : 'Todos'].join(' · ')
-
   useEffect(() => {
     getUserInfo().then(info => {
       if (!info) { router.push('/login'); return }
@@ -308,7 +306,7 @@ export default function EstadisticasPage() {
           return (
             <div style={{ background: '#2B2B2B', borderRadius: 8, padding: 16, border: '1px solid #3a3a3a', marginBottom: 24, overflowX: 'auto' }}>
               <h3 style={{ fontSize: 16, marginBottom: 12 }}>
-                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'} (${filtroTexto})`} — finalizados
+                📈 {esDemo ? (vistaGrafico === 'demo-diario' ? 'Ejemplo — semana típica' : 'Ejemplo — año típico') : `Ventas ${vistaGrafico === 'mensual' ? 'mensuales' : 'diarias'}`} — finalizados
               </h3>
               <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', maxWidth: w, height: 'auto' }}>
                 <line x1={pad.left} y1={pad.top} x2={pad.left} y2={h - pad.bottom} stroke="#3a3a3a" />
