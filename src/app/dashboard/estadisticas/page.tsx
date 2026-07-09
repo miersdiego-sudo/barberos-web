@@ -177,7 +177,7 @@ export default function EstadisticasPage() {
               style={{ padding: '8px 14px', background: '#2B2B2B', color: '#F2EFE9', border: '1px solid #3a3a3a', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
               {vistaGrafico === 'mensual' ? '📅 Ver diario' : '📆 Ver mensual'}
             </button>
-            {esAdmin && <button onClick={() => setVistaGrafico(v => v === 'diario' ? 'demo-diario' : v === 'demo-diario' ? 'demo-mensual' : 'diario')}
+            <button onClick={() => setVistaGrafico(v => v === 'diario' ? 'demo-diario' : v === 'demo-diario' ? 'demo-mensual' : 'diario')}
               style={{ padding: '8px 14px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
               {vistaGrafico === 'demo-diario' ? '🎲 Demo mensual' : vistaGrafico === 'demo-mensual' ? '📊 Volver' : '🎲 Demo'}
             </button>}
