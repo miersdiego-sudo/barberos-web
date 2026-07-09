@@ -233,7 +233,6 @@ export default function EstadisticasPage() {
 
         {verGrafico && (() => {
           const datos: { label: string; total: number; turnos?: number }[] = []
-          const nombreDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
           const esDemo = vistaGrafico === 'demo-diario' || vistaGrafico === 'demo-mensual'
 
           if (vistaGrafico === 'demo-diario') {
@@ -281,9 +280,7 @@ export default function EstadisticasPage() {
             const fin = new Date(`${maxA}-${String(maxM).padStart(2, '0')}-${String(maxD).padStart(2, '0')}T12:00:00`)
             for (let d = new Date(inicio); d <= fin; d.setDate(d.getDate() + 1)) {
               const ds = d.toISOString().split('T')[0]
-              const fechaObj = new Date(ds + 'T12:00:00')
-              const nombre = nombreDias[fechaObj.getDay()]
-              const label = `${nombre} ${d}`
+              const label = `${ds.slice(8, 10)}/${ds.slice(5, 7)}`
               const delDia = turnos.filter(t => {
                 if (t.fecha !== ds) return false
                 if (t.estado !== 'finalizado') return false
