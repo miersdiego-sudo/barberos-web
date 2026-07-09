@@ -28,7 +28,8 @@ export default function AdminLocalesPage() {
       if (l.activo && l.fecha_pago) {
         const pago = new Date(l.fecha_pago + 'T12:00:00')
         const diff = Math.floor((hoy.getTime() - pago.getTime()) / (1000 * 60 * 60 * 24))
-        if (diff > 30) {
+        const limite = l.plan === 'trial' ? 14 : 30
+        if (diff > limite) {
           await supabase.from('locales').update({ activo: false }).eq('id', l.id)
         }
       }
@@ -37,7 +38,7 @@ export default function AdminLocalesPage() {
   }
 
   const aprobar = async (localId: number) => {
-    const { error } = await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', localId)
+    const { error } = await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0], plan: 'trial' }).eq('id', localId)
     if (error) { alert('Error al aprobar: ' + error.message); return }
     cargar()
   }
@@ -49,7 +50,7 @@ export default function AdminLocalesPage() {
   }
 
   const registrarPago = async (localId: number) => {
-    await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', localId)
+    await supabase.from('locales').update({ activo: true, fecha_pago: new Date().toISOString().split('T')[0], plan: 'mensual' }).eq('id', localId)
     cargar()
   }
 
@@ -93,10 +94,11 @@ export default function AdminLocalesPage() {
     cargar()
   }
 
-  const diasRestantes = (fecha?: string | null) => {
+  const diasRestantes = (fecha?: string | null, plan?: string | null) => {
     if (!fecha) return null
     const diff = Math.floor((Date.now() - new Date(fecha + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24))
-    return 30 - diff
+    const limite = plan === 'trial' ? 14 : 30
+    return limite - diff
   }
 
   if (loading) return <div style={{ padding: 40, color: '#888' }}>Cargando...</div>
@@ -150,16 +152,16 @@ export default function AdminLocalesPage() {
         <h2 style={{ fontSize: 16, color: '#888', marginBottom: 12 }}>Locales activos ({activas.length})</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {activas.map(l => {
-            const dias = diasRestantes(l.fecha_pago)
+            const dias = diasRestantes(l.fecha_pago, l.plan)
             return (
             <div key={l.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #3a3a3a' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'}</p>
+                  <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.user_id ? '✅ Dueño asignado' : '⏳ Sin dueño'} · {l.plan === 'trial' ? '🆕 Prueba' : '💳 Mensual'}</p>
                   {l.email && <p style={{ color: '#aaa', fontSize: 12, marginTop: 1 }}>📧 {l.email}</p>}
                   {l.fecha_pago && <p style={{ fontSize: 12, color: dias !== null && dias <= 3 ? dias < 0 ? '#e74c3c' : '#D9A441' : '#888', marginTop: 2 }}>
-                    {dias !== null && dias >= 0 ? `⏳ ${dias}d restantes` : dias !== null && dias < 0 ? `❌ Vencido hace ${Math.abs(dias)}d` : ''} · Último pago: {l.fecha_pago}
+                    {dias !== null && dias >= 0 ? `${l.plan === 'trial' ? '🆕 Prueba' : '💳'}` + ` ${dias}d restantes` : dias !== null && dias < 0 ? `❌ Vencido hace ${Math.abs(dias)}d` : ''} · {l.fecha_pago}
                   </p>}
                 </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -180,16 +182,16 @@ export default function AdminLocalesPage() {
             <h2 style={{ fontSize: 16, color: '#e74c3c', marginBottom: 12, marginTop: 24 }}>Vencidos sin pago ({vencidas.length})</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {vencidas.map(l => {
-                const dias = diasRestantes(l.fecha_pago)
+                const dias = diasRestantes(l.fecha_pago, l.plan)
                 return (
                 <div key={l.id} style={{ background: '#2B2B2B', borderRadius: 8, padding: 14, border: '1px solid #e74c3c' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: 15 }}>{l.nombre}</p>
-                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug}</p>
+                      <p style={{ color: '#888', fontSize: 13 }}>/{l.slug} · {l.plan === 'trial' ? '🆕 Prueba' : '💳 Mensual'}</p>
                       {l.email && <p style={{ color: '#aaa', fontSize: 12, marginTop: 1 }}>📧 {l.email}</p>}
                       {l.fecha_pago && <p style={{ fontSize: 12, color: '#e74c3c', marginTop: 2 }}>
-                        ❌ Vencido hace {dias !== null ? Math.abs(dias) : '?'}d · Último pago: {l.fecha_pago}
+                        ❌ Vencido hace {dias !== null ? Math.abs(dias) : '?'}d · {l.fecha_pago}
                       </p>}
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>

@@ -13,6 +13,7 @@ export type LocalDB = {
   email?: string | null
   activo?: boolean
   fecha_pago?: string | null
+  plan?: string | null
   created_at?: string
 }
 
